@@ -1,0 +1,16 @@
+# Skompilowane binaria
+topk/reference/topk_ref
+
+# Wygenerowane dane (duże pliki binarne)
+topk/data/
+
+# Wyniki i wykresy
+topk/reference/results.txt
+topk/reference/benchmark_ref.png
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Stare binaria lab
+lab2/lab2
