@@ -1,0 +1,25 @@
+# Benchmark MPI top-k | N=100000 D=128 Q=20 k=10
+
+=== 1 proces ===
+  Procesy MPI:           1
+  Calkowity czas:        178.125 ms
+  Czas obliczen (rank0): 117.504 ms
+  Czas merge:            0.012 ms
+  P95 latency:           6103.958 us
+  Przepustowosc:         112.3 zapytan/s
+
+=== 2 procesy ===
+  Procesy MPI:           2
+  Calkowity czas:        110.613 ms
+  Czas obliczen (rank0): 59.423 ms
+  Czas merge:            0.008 ms
+  P95 latency:           3105.445 us
+  Przepustowosc:         180.8 zapytan/s
+
+=== 4 procesy ===
+  Procesy MPI:           4
+  Calkowity czas:        80.279 ms
+  Czas obliczen (rank0): 30.356 ms
+  Czas merge:            0.011 ms
+  P95 latency:           1594.578 us
+  Przepustowosc:         249.1 zapytan/s
