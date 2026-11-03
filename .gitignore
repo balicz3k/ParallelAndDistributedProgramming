@@ -14,3 +14,6 @@ __pycache__/
 
 # Stare binaria lab
 lab2/lab2
+
+# Lab2 — duże pliki danych
+lab2/data/
