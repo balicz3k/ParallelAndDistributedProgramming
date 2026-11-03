@@ -1,0 +1,31 @@
+# topk_cuda — benchmark (RTX 4060, Ada Lovelace sm_89, CUDA 12.4)
+# D=128, Q=20, k=10
+# Poprawnosc: indeksy top-k IDENTYCZNE z referencja (topk_ref) dla N=100k i N=1M
+#
+# Architektura kernela:
+#   - 1 blok CUDA = 1 zapytanie (blockIdx.x), 256 watkow/blok
+#   - watki przegladaja baze grid-stride, lokalny top-k w rejestrach
+#   - redukcja top-k przez shared memory (query w shared + bufor kandydatow)
+#   - odleglosc euklidesowa (kwadrat w kernelu, sqrt na koncu), remis = mniejszy indeks
+
+## N=100000
+kernel_ms=5.856
+total_ms=13.801
+transfer_ms=7.945
+qps_kernel=3415.2
+qps_total=1449.1
+poprawnosc=OK (indeksy identyczne z ref)
+
+## N=1000000
+kernel_ms=53.804
+total_ms=132.034
+transfer_ms=78.230
+qps_kernel=371.7
+qps_total=151.5
+poprawnosc=OK (indeksy identyczne z ref)
+
+## Porownanie z referencja (N=1M, D=128, k=10, CPU)
+ref_p95_ms=62.370
+ref_qps=16.7
+# Speedup (kernel vs ref per-query): 62.37ms / 2.69ms = 23.2x
+# Speedup (total vs ref per-query):  62.37ms / 6.60ms = 9.4x
