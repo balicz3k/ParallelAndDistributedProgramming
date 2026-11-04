@@ -2,16 +2,31 @@
 # N=100000, D=128, Q=20, k=10
 # REF (topk_ref, 1 wątek): P95=6120.579 us, QPS=170.4
 
-# Watki  | P95 (us) | QPS    | Speedup P95 | Speedup QPS
-# --------|----------|--------|-------------|------------
-#       1 | 6175.105 |  168.3 |       0.99x |       0.99x
-#       2 | 3682.019 |  301.6 |       1.66x |       1.77x
-#       4 | 2636.387 |  501.5 |       2.32x |       2.94x
-#       8 | 2076.518 |  647.6 |       2.95x |       3.80x
+# Watki  | P95 (us) | QPS    | Speedup P95 | Speedup QPS | Efektywnosc
+# --------|----------|--------|-------------|-------------|------------
+#       1 | 6568.965 |  166.8 |       1.00x |       1.00x |       1.000
+#       2 | 3521.586 |  316.9 |       1.87x |       1.90x |       0.950
+#       4 | 2098.658 |  590.5 |       3.13x |       3.54x |       0.885
+#       8 | 1637.558 |  885.9 |       4.01x |       5.31x |       0.664
 
-threads=1  total_ms=118.838  avg_us=5941.880  p95_us=6175.105  qps=168.3
-threads=2  total_ms=66.310   avg_us=3277.408  p95_us=3682.019  qps=301.6
-threads=4  total_ms=39.881   avg_us=1944.350  p95_us=2636.387  qps=501.5
-threads=8  total_ms=30.881   avg_us=1491.073  p95_us=2076.518  qps=647.6
+threads=1
+    Calkowity czas:        118.194 ms
+    P95 latency:           6167.350 us
+    Przepustowosc:         169.2 zapytan/s
+
+threads=2
+    Calkowity czas:        63.331 ms
+    P95 latency:           3588.264 us
+    Przepustowosc:         315.8 zapytan/s
+
+threads=4
+    Calkowity czas:        33.921 ms
+    P95 latency:           2139.660 us
+    Przepustowosc:         589.6 zapytan/s
+
+threads=8
+    Calkowity czas:        20.574 ms
+    P95 latency:           1449.185 us
+    Przepustowosc:         972.1 zapytan/s
 
 # Poprawnosc: wyniki identyczne z referencja dla 1/2/4/8 watkow (VERIFY OK)

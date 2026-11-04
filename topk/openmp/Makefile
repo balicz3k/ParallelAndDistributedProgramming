@@ -7,7 +7,7 @@ BASE      = $(DATA_DIR)/base.bin
 QUERIES   = $(DATA_DIR)/queries.bin
 N         = 100000
 D         = 128
-Q         = 100
+Q         = 20
 K         = 10
 
 all: $(TARGET)

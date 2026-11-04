@@ -15,9 +15,9 @@
  *
  * Strategia równoległości:
  *   - Pętla po N wektorach bazy jest zrównoleglona (#pragma omp parallel for)
- *   - Każdy wątek utrzymuje lokalną prywatną tablicę odległości
- *   - Na końcu każdego zapytania lokalne wyniki są mergowane w critical section
- *   - Unikamy false sharing przez prywatne struktury per wątek
+ *   - Wątki zapisują wyniki do wspólnej tablicy dists[N] (każdy wątek do
+ *     odrębnego zakresu indeksów — brak wyścigu danych, brak critical section)
+ *   - Po obliczeniu wszystkich odległości sekwencyjny partial_sort wyznacza top-k
  */
 
 #include <algorithm>
