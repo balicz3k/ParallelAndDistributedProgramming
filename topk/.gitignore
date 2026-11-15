@@ -1,0 +1,14 @@
+# duze pliki danych (odtwarzalne: make data)
+data/**/*.bin
+data/*.bin
+# binaria
+reference/topk_ref
+openmp/topk_omp
+cuda/topk_cuda
+cuda/topk_cublas
+mpi/topk_mpi
+# artefakty testow
+tests/_tmp/
+__pycache__/
+*.pyc
+.venv/
