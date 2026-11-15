@@ -35,3 +35,11 @@ topk/mpi/data_mpi/
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+
+# Lab4 - binarki i log pomiarów
+lab4/prz_mpi
+lab4/przyklad
+lab4/ring
+lab4/bcast
+lab4/scatter_gather
+lab4/bench.log
