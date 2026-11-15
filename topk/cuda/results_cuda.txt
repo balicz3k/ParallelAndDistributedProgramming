@@ -1,31 +1,147 @@
-# topk_cuda — benchmark (RTX 4060, Ada Lovelace sm_89, CUDA 12.4)
-# D=128, Q=20, k=10
-# Poprawnosc: indeksy top-k IDENTYCZNE z referencja (topk_ref) dla N=100k i N=1M
+# ============================================================================
+# topk_cuda / topk_cublas — benchmark CUDA (top-k wyszukiwanie wektorowe)
+# ============================================================================
+# Sprzet:   NVIDIA GeForce RTX 4060, 8188 MiB, Ada Lovelace sm_89
+#           AMD Ryzen 7 5700X (8C/16T), 31 GiB RAM
+# Soft:     CUDA 12.4 (nvcc V12.4.131), -O3 -std=c++17 -arch=sm_89
+# Dane:     float32, D=128, Q=20 (zapytania.bin), generate_data.py seed=42
+# Metryka:  odleglosc euklidesowa; remis = mniejszy indeks (jak w referencji)
 #
-# Architektura kernela:
-#   - 1 blok CUDA = 1 zapytanie (blockIdx.x), 256 watkow/blok
-#   - watki przegladaja baze grid-stride, lokalny top-k w rejestrach
-#   - redukcja top-k przez shared memory (query w shared + bufor kandydatow)
-#   - odleglosc euklidesowa (kwadrat w kernelu, sqrt na koncu), remis = mniejszy indeks
+# Poprawnosc: indeksy top-k IDENTYCZNE z referencja (topk_ref) sprawdzone dla
+#   N=10k/100k/1M oraz k=1/10/20/50 (diff = 0). cuBLAS: indeksy identyczne
+#   (odleglosci w ramach tolerancji FP — inna kolejnosc sumowania w SGEMM).
+#
+# Metodologia pomiaru:
+#   - warmup=2 + repeat=5 niezaleznych pomiarow; mediana + rozrzut [min/max/IQR].
+#   - czas RDZENIA (kernel_ms) oddzielony od czasu PELNEGO (total_ms, z transferem
+#     H->D->H zapytan i wynikow); transfer BAZY mierzony osobno (base_upload_ms,
+#     baza persystentna na GPU — wgrywana RAZ, zgodnie z karta D03).
+#   - P95: query_latency_us_pXX = 95. percentyl LATENCJI POJEDYNCZEGO zapytania,
+#     mierzonej zdarzeniami CUDA per zapytanie (kernel jednoblokowy na zapytanie),
+#     n_obs = Q*repeat = 100 obserwacji zadan. To NIE jest kernel_ms/Q.
+#   - QPS (tryb batch): caly wsad Q przez wiele blokow rownolegle, przepustowosc.
+#   - VRAM: cudaMemGetInfo (alokacja = roznica free przed/po; used = total-free).
+#   - RAM: getrusage(RUSAGE_SELF).ru_maxrss (peak RSS).
+#
+# Architektura wlasnego kernela (topk_cuda):
+#   - 1 blok = 1 zapytanie; zapytanie w shared memory; baza grid-stride + float4.
+#   - lokalny top-k w rejestrach (sortowana wstawka) -> REDUKCJA DRZEWIASTA
+#     (merge dwoch posortowanych list top-k w O(k)); brak sekwencyjnej petli
+#     w watku 0.
+#   - strumienie: baza wgrana raz; transfer zapytan nakladany na kernel. Przy
+#     Q=20 transfer zapytan (~10 KB) jest pomijalny -> streamy ON vs OFF bez
+#     mierzalnej roznicy (obciazenie compute-bound). Mechanizm zaimplementowany;
+#     zysk ujawnilby sie dla duzego Q / strumienia zapytan online.
+#
+# topk_cublas (druga implementacja, referencja wydajnosci):
+#   - ||q-b||^2 = ||q||^2 + ||b||^2 - 2 q.b; iloczyn q.b przez cuBLAS SGEMM,
+#     normy + skladanie + selekcja top-k = wlasne kernele. Materializuje pelna
+#     macierz odleglosci Q*N w VRAM (dist_matrix_mb) — stad wiekszy narzut pamieci.
+#
+# Skroty kluczowych wynikow (mediana z 5 powtorzen, k=10):
+#   N=10k:  wlasny kernel 0.23 ms / 87k QPS;  cuBLAS 0.11 ms / 181k QPS
+#   N=100k: wlasny kernel 1.78 ms / 11.2k QPS; cuBLAS 0.95 ms / 21k QPS
+#   N=1M:   wlasny kernel 14.4 ms / 1.39k QPS; cuBLAS 7.89 ms / 2.53k QPS
+#   P95 latencji 1 zapytania: N=100k ~1.85 ms, N=1M ~14.3 ms.
+# ============================================================================
 
-## N=100000
-kernel_ms=5.856
-total_ms=13.801
-transfer_ms=7.945
-qps_kernel=3415.2
-qps_total=1449.1
-poprawnosc=OK (indeksy identyczne z ref)
+## N=10000  (N=10000 D=128 Q=20 k=10 threads=256 streamy=1 repeat=5)
+base_upload_ms=0.891744
+kernel_ms_median=0.229248 kernel_ms_min=0.222944 kernel_ms_max=0.229920 kernel_ms_iqr=0.003328
+total_ms_median=0.263840 total_ms_min=0.250304 total_ms_max=0.264800 total_ms_iqr=0.011776
+qps_kernel_median=87241.763551 qps_kernel_min=86986.778071 qps_kernel_max=89708.623837
+qps_total_median=75803.520185 qps_total_min=75528.697452 qps_total_max=79902.833842
+query_latency_us_p50=211.968005 p95=219.187199 p99=222.227513 mean=212.427201 n_obs=100
+vram_alloc_mb=8.000000 vram_used_mb=1512.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=163.531250
 
-## N=1000000
-kernel_ms=53.804
-total_ms=132.034
-transfer_ms=78.230
-qps_kernel=371.7
-qps_total=151.5
-poprawnosc=OK (indeksy identyczne z ref)
+## N=100000  (N=100000 D=128 Q=20 k=10 threads=256 streamy=1 repeat=5)
+base_upload_ms=7.917600
+kernel_ms_median=1.780256 kernel_ms_min=1.773536 kernel_ms_max=1.789024 kernel_ms_iqr=0.007712
+total_ms_median=1.811072 total_ms_min=1.803168 total_ms_max=1.817568 total_ms_iqr=0.009568
+qps_kernel_median=11234.339123 qps_kernel_min=11179.279904 qps_kernel_max=11276.906910
+qps_total_median=11043.183313 qps_total_min=11003.715190 qps_total_max=11091.589554
+query_latency_us_p50=1826.815963 p95=1850.419223 p99=1863.680005 mean=1829.365120 n_obs=100
+vram_alloc_mb=52.000000 vram_used_mb=1556.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=207.312500
 
-## Porownanie z referencja (N=1M, D=128, k=10, CPU)
-ref_p95_ms=62.370
-ref_qps=16.7
-# Speedup (kernel vs ref per-query): 62.37ms / 2.69ms = 23.2x
-# Speedup (total vs ref per-query):  62.37ms / 6.60ms = 9.4x
+## N=1000000  (N=1000000 D=128 Q=20 k=10 threads=256 streamy=1 repeat=5)
+base_upload_ms=78.166786
+kernel_ms_median=15.563520 kernel_ms_min=15.544544 kernel_ms_max=15.590208 kernel_ms_iqr=0.016256
+total_ms_median=15.606880 total_ms_min=15.593888 total_ms_max=15.628224 total_ms_iqr=0.017695
+qps_kernel_median=1285.056301 qps_kernel_min=1282.856517 qps_kernel_max=1286.625051
+qps_total_median=1281.486098 qps_total_min=1279.735914 qps_total_max=1282.553757
+query_latency_us_p50=14229.503632 p95=14266.572714 p99=15234.019499 mean=14265.897589 n_obs=100
+vram_alloc_mb=492.000000 vram_used_mb=1996.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=646.453125
+
+## CUBLAS N=10000  (N=10000 D=128 Q=20 k=10 repeat=5)
+kernel_ms_median=0.109568 kernel_ms_min=0.109568 kernel_ms_max=0.111616 kernel_ms_iqr=0.001024
+qps_kernel_median=182535.046996 qps_kernel_min=179185.778961 qps_kernel_max=182535.046996
+vram_alloc_mb=8.000000 vram_used_mb=1512.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=340.675781
+dist_matrix_mb=0.762939
+
+## CUBLAS N=100000  (N=100000 D=128 Q=20 k=10 repeat=5)
+kernel_ms_median=0.946176 kernel_ms_min=0.941056 kernel_ms_max=0.950272 kernel_ms_iqr=0.004096
+qps_kernel_median=21137.716618 qps_kernel_min=21046.605079 qps_kernel_max=21252.720052
+vram_alloc_mb=60.000000 vram_used_mb=1564.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=384.667969
+dist_matrix_mb=7.629395
+
+## CUBLAS N=1000000  (N=1000000 D=128 Q=20 k=10 repeat=5)
+kernel_ms_median=7.917568 kernel_ms_min=7.796800 kernel_ms_max=7.960512 kernel_ms_iqr=0.131072
+qps_kernel_median=2526.028129 qps_kernel_min=2512.401161 qps_kernel_max=2565.154890
+vram_alloc_mb=574.000000 vram_used_mb=2078.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=824.195312
+dist_matrix_mb=76.293945
+
+## k=1 N=100000  (N=100000 D=128 Q=20 k=1 threads=256 streamy=1 repeat=5)
+base_upload_ms=7.912256
+kernel_ms_median=1.491776 kernel_ms_min=1.484160 kernel_ms_max=1.542208 kernel_ms_iqr=0.007584
+total_ms_median=1.520928 total_ms_min=1.512640 total_ms_max=1.570208 total_ms_iqr=0.014592
+qps_kernel_median=13406.838654 qps_kernel_min=12968.419673 qps_kernel_max=13475.636536
+qps_total_median=13149.866179 qps_total_min=12737.166409 qps_total_max=13221.916654
+query_latency_us_p50=1337.344050 p95=1385.523254 p99=1390.632939 mean=1341.394883 n_obs=100
+vram_alloc_mb=52.000000 vram_used_mb=1556.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=207.578125
+
+## k=5 N=100000  (N=100000 D=128 Q=20 k=5 threads=256 streamy=1 repeat=5)
+base_upload_ms=7.918368
+kernel_ms_median=1.459424 kernel_ms_min=1.450496 kernel_ms_max=1.460224 kernel_ms_iqr=0.007520
+total_ms_median=1.486880 total_ms_min=1.477952 total_ms_max=1.497120 total_ms_iqr=0.008000
+qps_kernel_median=13704.036484 qps_kernel_min=13696.528448 qps_kernel_max=13788.387265
+qps_total_median=13450.985111 qps_total_min=13358.982377 qps_total_max=13532.239175
+query_latency_us_p50=1417.215943 p95=1446.912050 p99=1459.200025 mean=1419.857918 n_obs=100
+vram_alloc_mb=52.000000 vram_used_mb=1556.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=207.203125
+
+## k=10 N=100000  (N=100000 D=128 Q=20 k=10 threads=256 streamy=1 repeat=5)
+base_upload_ms=7.918752
+kernel_ms_median=1.624672 kernel_ms_min=1.617632 kernel_ms_max=1.636192 kernel_ms_iqr=0.003104
+total_ms_median=1.654784 total_ms_min=1.648096 total_ms_max=1.665280 total_ms_iqr=0.004512
+qps_kernel_median=12310.176651 qps_kernel_min=12223.504600 qps_kernel_max=12363.751219
+qps_total_median=12086.169816 qps_total_min=12009.992426 qps_total_max=12135.215679
+query_latency_us_p50=1671.167970 p95=1696.819246 p99=1702.922213 mean=1672.487359 n_obs=100
+vram_alloc_mb=52.000000 vram_used_mb=1556.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=207.132812
+
+## k=20 N=100000  (N=100000 D=128 Q=20 k=20 threads=256 streamy=1 repeat=5)
+base_upload_ms=7.916928
+kernel_ms_median=2.271488 kernel_ms_min=2.265856 kernel_ms_max=2.273280 kernel_ms_iqr=0.007040
+total_ms_median=2.298592 total_ms_min=2.293440 total_ms_max=2.301824 total_ms_iqr=0.006528
+qps_kernel_median=8804.801271 qps_kernel_min=8797.860727 qps_kernel_max=8826.686143
+qps_total_median=8700.978343 qps_total_min=8688.761258 qps_total_max=8720.524233
+query_latency_us_p50=2344.959974 p95=2363.443303 p99=2372.648907 mean=2347.225277 n_obs=100
+vram_alloc_mb=52.000000 vram_used_mb=1556.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=207.339844
+
+## k=50 N=100000  (N=100000 D=128 Q=20 k=50 threads=128 streamy=1 repeat=5)
+base_upload_ms=7.920928
+kernel_ms_median=7.919904 kernel_ms_min=7.908352 kernel_ms_max=7.956928 kernel_ms_iqr=0.009120
+total_ms_median=7.955168 total_ms_min=7.941824 total_ms_max=7.989824 total_ms_iqr=0.009312
+qps_kernel_median=2525.283061 qps_kernel_min=2513.532932 qps_kernel_max=2528.971935
+qps_total_median=2514.089027 qps_total_min=2503.184107 qps_total_max=2518.313186
+query_latency_us_p50=7948.800087 p95=8015.564585 p99=8055.142221 mean=7951.912651 n_obs=100
+vram_alloc_mb=52.000000 vram_used_mb=1556.875000 vram_total_mb=7804.250000
+ram_peak_rss_mb=207.484375
