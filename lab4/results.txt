@@ -1,0 +1,108 @@
+### mpirun -np 7 --display-map ./prz_mpi
+
+========================   JOB MAP   ========================
+Data for JOB prterun-Kubuntu-PC-486862@1 offset 0 Total slots allocated 8
+    Mapping policy: BYCORE:NOOVERSUBSCRIBE  Ranking policy: FILL Binding policy: CORE:IF-SUPPORTED
+    Cpu set: N/A  PPR: N/A  Cpus-per-rank: N/A  Cpu Type: CORE
+
+
+Data for node: Kubuntu-PC	Num slots: 8	Max slots: 0	Num procs: 7
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 0 Bound: package[0][core:L0]
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 1 Bound: package[0][core:L1]
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 2 Bound: package[0][core:L2]
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 3 Bound: package[0][core:L3]
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 4 Bound: package[0][core:L4]
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 5 Bound: package[0][core:L5]
+        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 6 Bound: package[0][core:L6]
+
+=============================================================
+Moj numer 5, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 6, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 4, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 1, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 3, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 0, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 2, w grupie 7 procesow, wezel Kubuntu-PC
+
+### mpirun -np 8 ./ring  (wejście: 5, 7, -1)
+Podaj liczbę:
+Proces 1 dostal 5 od procesu 0
+Proces 2 dostal 5 od procesu 1
+Proces 3 dostal 5 od procesu 2
+Proces 4 dostal 5 od procesu 3
+Proces 5 dostal 5 od procesu 4
+Proces 6 dostal 5 od procesu 5
+Proces 7 dostal 5 od procesu 6
+Proces 0 dostal 5 od procesu 7
+Podaj liczbę:
+Proces 1 dostal 7 od procesu 0
+Proces 2 dostal 7 od procesu 1
+Proces 3 dostal 7 od procesu 2
+Proces 4 dostal 7 od procesu 3
+Proces 5 dostal 7 od procesu 4
+Proces 6 dostal 7 od procesu 5
+Proces 7 dostal 7 od procesu 6
+Proces 0 dostal 7 od procesu 7
+Podaj liczbę:
+
+### mpirun -np 4 ./bcast  (wejście: 5, 7, -1)
+Podaj liczbę:
+Proces 0 z 4 otrzymal liczbe 5
+Podaj liczbę:
+Proces 0 z 4 otrzymal liczbe 7
+Podaj liczbę:
+Proces 1 z 4 otrzymal liczbe 5
+Proces 1 z 4 otrzymal liczbe 7
+Proces 3 z 4 otrzymal liczbe 5
+Proces 3 z 4 otrzymal liczbe 7
+Proces 2 z 4 otrzymal liczbe 5
+Proces 2 z 4 otrzymal liczbe 7
+
+### mpirun -np 2 ./scatter_gather
+Liczba procesów: 2, N = 10000, MPI_Scatter
+Proces 0: 5000 elementów, suma 250091
+Proces 1: 5000 elementów, suma 244524
+Suma całkowita: 494615 (sekwencyjnie 494615) OK
+Czas: 0.000148 s
+
+### mpirun -np 3 ./scatter_gather
+Liczba procesów: 3, N = 10000, MPI_Scatterv
+Proces 0: 3334 elementów, suma 168641
+Proces 1: 3333 elementów, suma 162847
+Proces 2: 3333 elementów, suma 163127
+Suma całkowita: 494615 (sekwencyjnie 494615) OK
+Czas: 0.000158 s
+
+### mpirun -np 4 ./scatter_gather
+Liczba procesów: 4, N = 10000, MPI_Scatter
+Proces 0: 2500 elementów, suma 125928
+Proces 1: 2500 elementów, suma 124163
+Proces 2: 2500 elementów, suma 122171
+Proces 3: 2500 elementów, suma 122353
+Suma całkowita: 494615 (sekwencyjnie 494615) OK
+Czas: 0.000161 s
+
+### mpirun -np 7 ./scatter_gather
+Liczba procesów: 7, N = 10000, MPI_Scatterv
+Proces 0: 1429 elementów, suma 72944
+Proces 1: 1429 elementów, suma 71693
+Proces 2: 1429 elementów, suma 71616
+Proces 3: 1429 elementów, suma 68729
+Proces 4: 1428 elementów, suma 69947
+Proces 5: 1428 elementów, suma 69949
+Proces 6: 1428 elementów, suma 69737
+Suma całkowita: 494615 (sekwencyjnie 494615) OK
+Czas: 0.000208 s
+
+### mpirun -np 8 ./scatter_gather
+Liczba procesów: 8, N = 10000, MPI_Scatter
+Proces 0: 1250 elementów, suma 63953
+Proces 1: 1250 elementów, suma 61975
+Proces 2: 1250 elementów, suma 64383
+Proces 3: 1250 elementów, suma 59780
+Proces 4: 1250 elementów, suma 61535
+Proces 5: 1250 elementów, suma 60636
+Proces 6: 1250 elementów, suma 60966
+Proces 7: 1250 elementów, suma 61387
+Suma całkowita: 494615 (sekwencyjnie 494615) OK
+Czas: 0.000169 s
