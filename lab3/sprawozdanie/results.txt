@@ -1,0 +1,50 @@
+=== 512x512, 3x3 ===
+Rozmiar: 512x512, Jądro: 3x3, Wątki: 1
+Seq:        0.003 s
+OMP:        0.002 s  speedup: 1.13x  poprawność: OK
+Collapse:   0.002 s  speedup: 1.05x  poprawność: OK
+Dynamic:    0.002 s  speedup: 1.36x  poprawność: OK
+Rozmiar: 512x512, Jądro: 3x3, Wątki: 4
+Seq:        0.002 s
+OMP:        0.001 s  speedup: 2.58x  poprawność: OK
+Collapse:   0.001 s  speedup: 2.81x  poprawność: OK
+Dynamic:    0.001 s  speedup: 2.42x  poprawność: OK
+Rozmiar: 512x512, Jądro: 3x3, Wątki: 8
+Seq:        0.002 s
+OMP:        0.001 s  speedup: 3.67x  poprawność: OK
+Collapse:   0.001 s  speedup: 4.19x  poprawność: OK
+Dynamic:    0.000 s  speedup: 4.69x  poprawność: OK
+
+=== 2048x2048, 7x7 ===
+Rozmiar: 2048x2048, Jądro: 7x7, Wątki: 1
+Seq:        0.150 s
+OMP:        0.144 s  speedup: 1.05x  poprawność: OK
+Collapse:   0.131 s  speedup: 1.15x  poprawność: OK
+Dynamic:    0.146 s  speedup: 1.03x  poprawność: OK
+Rozmiar: 2048x2048, Jądro: 7x7, Wątki: 4
+Seq:        0.149 s
+OMP:        0.043 s  speedup: 3.46x  poprawność: OK
+Collapse:   0.035 s  speedup: 4.21x  poprawność: OK
+Dynamic:    0.045 s  speedup: 3.34x  poprawność: OK
+Rozmiar: 2048x2048, Jądro: 7x7, Wątki: 8
+Seq:        0.151 s
+OMP:        0.034 s  speedup: 4.38x  poprawność: OK
+Collapse:   0.031 s  speedup: 4.89x  poprawność: OK
+Dynamic:    0.030 s  speedup: 5.06x  poprawność: OK
+
+=== 4096x4096, 15x15 ===
+Rozmiar: 4096x4096, Jądro: 15x15, Wątki: 1
+Seq:        2.642 s
+OMP:        2.520 s  speedup: 1.05x  poprawność: OK
+Collapse:   2.477 s  speedup: 1.07x  poprawność: OK
+Dynamic:    2.472 s  speedup: 1.07x  poprawność: OK
+Rozmiar: 4096x4096, Jądro: 15x15, Wątki: 4
+Seq:        2.743 s
+OMP:        0.701 s  speedup: 3.91x  poprawność: OK
+Collapse:   0.672 s  speedup: 4.08x  poprawność: OK
+Dynamic:    0.670 s  speedup: 4.09x  poprawność: OK
+Rozmiar: 4096x4096, Jądro: 15x15, Wątki: 8
+Seq:        2.639 s
+OMP:        0.522 s  speedup: 5.06x  poprawność: OK
+Collapse:   0.523 s  speedup: 5.04x  poprawność: OK
+Dynamic:    0.458 s  speedup: 5.76x  poprawność: OK
