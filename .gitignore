@@ -17,3 +17,21 @@ lab2/lab2
 
 # Lab2 — duże pliki danych
 lab2/data/
+
+# Binarki (skompilowane programy bez rozszerzenia)
+lab3/lab3
+topk/**/topk_*
+!topk/**/topk_*.*
+
+# Dane benchmarków (odtwarzalne skryptami)
+topk/mpi/data_mpi/
+*.bin
+
+# Pliki pomocnicze LaTeX-a
+*.aux
+*.log
+!lab2/bench.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
