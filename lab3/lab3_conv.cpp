@@ -1,224 +1,174 @@
-#include <iostream>
-#include <vector>
-#include <random>
+/*
+ * PRiR Laboratorium 3 - rownolegla konwolucja dwuwymiarowa (OpenMP)
+ *
+ * Program generuje losowa macierz N x N oraz losowe jadro K x K (K nieparzyste),
+ * liczy konwolucje z zerowym dopelnieniem poza obrazem i porownuje:
+ *   seq      - wersja sekwencyjna (baza czasu i wynik wzorcowy)
+ *   outer    - parallel for po wierszach i (schedule(static))
+ *   collapse - parallel for collapse(2) po parach (i,j) (schedule(static))
+ *   dynamic  - parallel for po wierszach, schedule(dynamic, 64)
+ *   inner    - petla zewnetrzna i sekwencyjna, rownolegla jest wewnetrzna petla po j
+ *              (tworzenie zespolu watkow dla kazdego wiersza)
+ * Kazdy wariant rownolegly jest sprawdzany z wynikiem sekwencyjnym (maks. roznica).
+ *
+ * Kompilacja: g++ -O3 -fopenmp -std=c++17 -Wall -Wextra lab3_conv.cpp -o lab3
+ * Uruchomienie: ./lab3 <N> <K> [powtorzenia=5]
+ * Wyjscie (stdout): CSV  N,K,variant,threads,rep,time_s  oraz linie '#' z wynikiem
+ * sprawdzenia poprawnosci. Dla kazdej konfiguracji wykonywana jest jedna rozgrzewka
+ * (nie mierzona), potem <powtorzenia> pomiarow omp_get_wtime().
+ */
+
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <random>
+#include <string>
+#include <vector>
 #include <omp.h>
 
-// ---------------------------------------------------------------
-// Wypełnienie macierzy losowymi wartościami z rozkładu [-1, 1]
-// ---------------------------------------------------------------
-void fill_random(std::vector<float>& v, int seed = 42) {
+typedef std::vector<float> Mat;
+
+// Wypelnienie wektora losowymi wartosciami z [-1, 1] (ziarno zapisane w wywolaniu)
+static void fill_random(Mat& v, unsigned seed) {
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
     for (auto& x : v) x = dist(rng);
 }
 
-// ---------------------------------------------------------------
-// Normalizacja jądra: dziel przez sumę bezwzględnych wartości
-// (unika overflow przy dużych jądrach)
-// ---------------------------------------------------------------
-void normalize_kernel(std::vector<float>& kernel) {
+// Normalizacja jadra: dzielenie przez sume wartosci bezwzglednych
+static void normalize_kernel(Mat& kernel) {
     float s = 0.0f;
     for (float x : kernel) s += std::fabs(x);
     if (s > 1e-9f)
         for (float& x : kernel) x /= s;
 }
 
-// ---------------------------------------------------------------
-// 1) Wersja sekwencyjna
-// ---------------------------------------------------------------
-void conv2d_seq(const std::vector<float>& matrix,
-                const std::vector<float>& kernel,
-                std::vector<float>& result,
-                int H, int W, int Kh, int Kw)
-{
-    int hk = Kh / 2;
-    int wk = Kw / 2;
-
-    for (int i = 0; i < H; ++i) {
-        for (int j = 0; j < W; ++j) {
-            float sum = 0.0f;
-            for (int m = 0; m < Kh; ++m) {
-                for (int n = 0; n < Kw; ++n) {
-                    int x = i + m - hk;
-                    int y = j + n - wk;
-                    if (x >= 0 && x < H && y >= 0 && y < W) {
-                        sum += matrix[x * W + y] * kernel[m * Kw + n];
-                    }
-                }
-            }
-            result[i * W + j] = sum;
+// Wynik konwolucji w jednym pikselu (i,j); kolejnosc sumowania taka sama we wszystkich
+// wariantach, wiec wyniki rownolegle powinny byc identyczne z sekwencyjnym.
+// noinline: wszystkie warianty (takze sekwencyjny) wywoluja ten sam skompilowany kod;
+// inaczej kompilator inline'uje i rozwija petle inaczej w kazdym wariancie
+// (wersja sekwencyjna byla wtedy ok. 30% wolniejsza od rownoleglej na 1 watku).
+static __attribute__((noinline)) float pixel(const float* M, const float* J, int i, int j,
+                          int H, int W, int K) {
+    const int hk = K / 2;
+    float sum = 0.0f;
+    for (int m = 0; m < K; ++m) {
+        for (int n = 0; n < K; ++n) {
+            int x = i + m - hk;
+            int y = j + n - hk;
+            if (x >= 0 && x < H && y >= 0 && y < W)
+                sum += M[x * W + y] * J[m * K + n];
         }
     }
+    return sum;
 }
 
-// ---------------------------------------------------------------
-// 2) Wersja równoległa — parallel for na pętli zewnętrznej (po i)
-// ---------------------------------------------------------------
-void conv2d_omp(const std::vector<float>& matrix,
-                const std::vector<float>& kernel,
-                std::vector<float>& result,
-                int H, int W, int Kh, int Kw,
-                int num_threads)
-{
-    int hk = Kh / 2;
-    int wk = Kw / 2;
+// 1) Sekwencyjnie
+static void conv_seq(const Mat& M, const Mat& J, Mat& R, int H, int W, int K) {
+    for (int i = 0; i < H; ++i)
+        for (int j = 0; j < W; ++j)
+            R[i * W + j] = pixel(M.data(), J.data(), i, j, H, W, K);
+}
 
-#pragma omp parallel for num_threads(num_threads) schedule(static)
+// 2) Zrownoleglona petla zewnetrzna (wiersze), podzial statyczny
+static void conv_outer(const Mat& M, const Mat& J, Mat& R, int H, int W, int K, int p) {
+#pragma omp parallel for num_threads(p) schedule(static)
+    for (int i = 0; i < H; ++i)
+        for (int j = 0; j < W; ++j)
+            R[i * W + j] = pixel(M.data(), J.data(), i, j, H, W, K);
+}
+
+// 3) collapse(2): obie petle po obrazie sklejone w jedna przestrzen H*W iteracji
+static void conv_collapse(const Mat& M, const Mat& J, Mat& R, int H, int W, int K, int p) {
+#pragma omp parallel for collapse(2) num_threads(p) schedule(static)
+    for (int i = 0; i < H; ++i)
+        for (int j = 0; j < W; ++j)
+            R[i * W + j] = pixel(M.data(), J.data(), i, j, H, W, K);
+}
+
+// 4) Petla zewnetrzna z przydzialem dynamicznym (porcje po 64 wiersze)
+static void conv_dynamic(const Mat& M, const Mat& J, Mat& R, int H, int W, int K, int p) {
+#pragma omp parallel for num_threads(p) schedule(dynamic, 64)
+    for (int i = 0; i < H; ++i)
+        for (int j = 0; j < W; ++j)
+            R[i * W + j] = pixel(M.data(), J.data(), i, j, H, W, K);
+}
+
+// 5) Zrownoleglona petla wewnetrzna (po j): zespol watkow tworzony dla kazdego wiersza
+static void conv_inner(const Mat& M, const Mat& J, Mat& R, int H, int W, int K, int p) {
     for (int i = 0; i < H; ++i) {
-        for (int j = 0; j < W; ++j) {
-            float sum = 0.0f;
-            for (int m = 0; m < Kh; ++m) {
-                for (int n = 0; n < Kw; ++n) {
-                    int x = i + m - hk;
-                    int y = j + n - wk;
-                    if (x >= 0 && x < H && y >= 0 && y < W) {
-                        sum += matrix[x * W + y] * kernel[m * Kw + n];
-                    }
-                }
-            }
-            result[i * W + j] = sum;
-        }
+#pragma omp parallel for num_threads(p) schedule(static)
+        for (int j = 0; j < W; ++j)
+            R[i * W + j] = pixel(M.data(), J.data(), i, j, H, W, K);
     }
 }
 
-// ---------------------------------------------------------------
-// 3) Wariant z collapse(2) — zrównoleglenie obu pętli zewnętrznych
-// ---------------------------------------------------------------
-void conv2d_omp_collapse(const std::vector<float>& matrix,
-                         const std::vector<float>& kernel,
-                         std::vector<float>& result,
-                         int H, int W, int Kh, int Kw,
-                         int num_threads)
-{
-    int hk = Kh / 2;
-    int wk = Kw / 2;
-
-#pragma omp parallel for collapse(2) num_threads(num_threads) schedule(static)
-    for (int i = 0; i < H; ++i) {
-        for (int j = 0; j < W; ++j) {
-            float sum = 0.0f;
-            for (int m = 0; m < Kh; ++m) {
-                for (int n = 0; n < Kw; ++n) {
-                    int x = i + m - hk;
-                    int y = j + n - wk;
-                    if (x >= 0 && x < H && y >= 0 && y < W) {
-                        sum += matrix[x * W + y] * kernel[m * Kw + n];
-                    }
-                }
-            }
-            result[i * W + j] = sum;
-        }
-    }
+// Maksymalna roznica bezwzgledna miedzy dwoma wynikami
+static double max_diff(const Mat& a, const Mat& b) {
+    double d = 0.0;
+    for (size_t i = 0; i < a.size(); ++i) d = std::max(d, (double)std::fabs(a[i] - b[i]));
+    return d;
 }
 
-// ---------------------------------------------------------------
-// 4) Wariant z schedule(dynamic, 64)
-// ---------------------------------------------------------------
-void conv2d_omp_schedule(const std::vector<float>& matrix,
-                         const std::vector<float>& kernel,
-                         std::vector<float>& result,
-                         int H, int W, int Kh, int Kw,
-                         int num_threads)
-{
-    int hk = Kh / 2;
-    int wk = Kw / 2;
+typedef void (*ParFn)(const Mat&, const Mat&, Mat&, int, int, int, int);
 
-#pragma omp parallel for num_threads(num_threads) schedule(dynamic, 64)
-    for (int i = 0; i < H; ++i) {
-        for (int j = 0; j < W; ++j) {
-            float sum = 0.0f;
-            for (int m = 0; m < Kh; ++m) {
-                for (int n = 0; n < Kw; ++n) {
-                    int x = i + m - hk;
-                    int y = j + n - wk;
-                    if (x >= 0 && x < H && y >= 0 && y < W) {
-                        sum += matrix[x * W + y] * kernel[m * Kw + n];
-                    }
-                }
-            }
-            result[i * W + j] = sum;
-        }
-    }
-}
-
-// ---------------------------------------------------------------
-// Sprawdzenie poprawności — max różnica między dwoma wynikami
-// ---------------------------------------------------------------
-bool verify(const std::vector<float>& ref,
-            const std::vector<float>& test,
-            float tol = 1e-4f)
-{
-    for (size_t i = 0; i < ref.size(); ++i) {
-        if (std::fabs(ref[i] - test[i]) > tol) return false;
-    }
-    return true;
-}
-
-// ---------------------------------------------------------------
-// main
-// ---------------------------------------------------------------
 int main(int argc, char* argv[]) {
     if (argc < 3) {
-        std::cerr << "Użycie: " << argv[0]
-                  << " <rozmiar_macierzy> <rozmiar_jadra> [num_threads]\n"
-                  << "Przykład: " << argv[0] << " 2048 7 8\n";
+        std::cerr << "Uzycie: " << argv[0] << " <N> <K> [powtorzenia]\n"
+                  << "Przyklad: " << argv[0] << " 2048 7 5\n";
         return 1;
     }
+    const int N = std::atoi(argv[1]);
+    const int K = std::atoi(argv[2]);
+    const int reps = (argc >= 4) ? std::atoi(argv[3]) : 5;
+    if (N < 1 || K < 1 || K % 2 == 0 || reps < 1) {
+        std::cerr << "Blad: N>=1, K nieparzyste, powtorzenia>=1.\n";
+        return 1;
+    }
+    const int H = N, W = N;
 
-    int N          = std::atoi(argv[1]);   // rozmiar macierzy N×N
-    int K          = std::atoi(argv[2]);   // rozmiar jądra K×K
-    int num_threads = (argc >= 4) ? std::atoi(argv[3]) : omp_get_max_threads();
+    Mat M((size_t)H * W), J((size_t)K * K), ref((size_t)H * W), R((size_t)H * W);
+    fill_random(M, 42);   // ziarno macierzy
+    fill_random(J, 7);    // ziarno jadra
+    normalize_kernel(J);
 
-    // Jądro musi być nieparzyste
-    if (K % 2 == 0) { std::cerr << "Rozmiar jądra musi być nieparzysty.\n"; return 1; }
+    std::printf("N,K,variant,threads,rep,time_s\n");
 
-    int H = N, W = N, Kh = K, Kw = K;
-    long long total = (long long)H * W;
+    // --- sekwencyjnie: rozgrzewka + pomiary (wynik ostatniego uruchomienia = wzorzec)
+    conv_seq(M, J, ref, H, W, K);
+    for (int r = 0; r < reps; ++r) {
+        double t0 = omp_get_wtime();
+        conv_seq(M, J, ref, H, W, K);
+        std::printf("%d,%d,seq,1,%d,%.6f\n", N, K, r, omp_get_wtime() - t0);
+    }
 
-    std::cout << "Rozmiar: " << H << "x" << W
-              << ", Jądro: " << Kh << "x" << Kw
-              << ", Wątki: " << num_threads << "\n";
+    struct Variant { const char* name; ParFn fn; };
+    const Variant variants[] = {
+        {"outer", conv_outer}, {"collapse", conv_collapse},
+        {"dynamic", conv_dynamic}, {"inner", conv_inner}
+    };
+    const int threads[] = {1, 2, 4, 8, 16};
 
-    // Alokacja
-    std::vector<float> matrix(total), kernel(Kh * Kw);
-    std::vector<float> res_seq(total), res_omp(total),
-                       res_collapse(total), res_dyn(total);
-
-    fill_random(matrix, 42);
-    fill_random(kernel, 7);
-    normalize_kernel(kernel);
-
-    // --- Sekwencja ---
-    double t0 = omp_get_wtime();
-    conv2d_seq(matrix, kernel, res_seq, H, W, Kh, Kw);
-    double seq_time = omp_get_wtime() - t0;
-    std::printf("Seq:     %8.3f s\n", seq_time);
-
-    // --- OMP basic ---
-    t0 = omp_get_wtime();
-    conv2d_omp(matrix, kernel, res_omp, H, W, Kh, Kw, num_threads);
-    double omp_time = omp_get_wtime() - t0;
-    bool ok_omp = verify(res_seq, res_omp);
-    std::printf("OMP:     %8.3f s  speedup: %.2fx  poprawność: %s\n",
-                omp_time, seq_time / omp_time, ok_omp ? "OK" : "BLAD");
-
-    // --- Collapse ---
-    t0 = omp_get_wtime();
-    conv2d_omp_collapse(matrix, kernel, res_collapse, H, W, Kh, Kw, num_threads);
-    double col_time = omp_get_wtime() - t0;
-    bool ok_col = verify(res_seq, res_collapse);
-    std::printf("Collapse:%8.3f s  speedup: %.2fx  poprawność: %s\n",
-                col_time, seq_time / col_time, ok_col ? "OK" : "BLAD");
-
-    // --- Dynamic ---
-    t0 = omp_get_wtime();
-    conv2d_omp_schedule(matrix, kernel, res_dyn, H, W, Kh, Kw, num_threads);
-    double dyn_time = omp_get_wtime() - t0;
-    bool ok_dyn = verify(res_seq, res_dyn);
-    std::printf("Dynamic: %8.3f s  speedup: %.2fx  poprawność: %s\n",
-                dyn_time, seq_time / dyn_time, ok_dyn ? "OK" : "BLAD");
-
-    return (ok_omp && ok_col && ok_dyn) ? 0 : 1;
+    bool all_ok = true;
+    for (const Variant& v : variants) {
+        for (int p : threads) {
+            // rozgrzewka, jednoczesnie sprawdzenie poprawnosci wzgledem wersji sekwencyjnej
+            std::fill(R.begin(), R.end(), 0.0f);
+            v.fn(M, J, R, H, W, K, p);
+            double d = max_diff(ref, R);
+            bool ok = d <= 1e-4;
+            all_ok = all_ok && ok;
+            std::printf("# poprawnosc N=%d K=%d %s p=%d max|roznica|=%.3g %s\n",
+                        N, K, v.name, p, d, ok ? "OK" : "BLAD");
+            for (int r = 0; r < reps; ++r) {
+                double t0 = omp_get_wtime();
+                v.fn(M, J, R, H, W, K, p);
+                std::printf("%d,%d,%s,%d,%d,%.6f\n", N, K, v.name, p, r,
+                            omp_get_wtime() - t0);
+            }
+        }
+    }
+    return all_ok ? 0 : 1;
 }
