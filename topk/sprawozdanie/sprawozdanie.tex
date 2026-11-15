@@ -1,0 +1,108 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\captionsetup{font=small}
+
+\title{Wyszukiwanie wektorowe top-$k$ (D03): wersja referencyjna, OpenMP, MPI i CUDA}
+\author{Jakub Balicki}
+\date{listopad 2026}
+
+\begin{document}
+\maketitle
+
+\section{Cel, dane i metryki}
+Celem projektu jest dokładne wyszukiwanie $k$ najbliższych sąsiadów (odległość euklidesowa, \texttt{float32}) dla partii zapytań w bazie $N$ wektorów o wymiarze $D$; remisy rozstrzyga niższy indeks, więc wszystkie wersje zwracają ten sam ranking co referencja (sprawdzone testami zgodności). Dane to losowe wektory z rozkładu $N(0,1)$ (ziarno 42); główny przypadek to $N=10^5$, $D=128$, $k=10$. Mierzymy czas przetwarzania partii (mediana), przepustowość QPS, 95.\ percentyl opóźnienia pojedynczego zapytania (P95), pamięć oraz przyspieszenie $S(p)=T(1)/T(p)$ i efektywność $E(p)=S(p)/p$. Wszystko zmierzono na jednej maszynie (Ryzen 7 5700X, 8 rdzeni/16 wątków, RTX 4060), a procesy MPI działały lokalnie na tym samym komputerze; każdy pomiar to rozgrzewka i 7 powtórzeń, podana jest mediana.
+
+\section{Jak działają poszczególne wersje}
+\paragraph{Referencja.} Program sekwencyjny dla każdego zapytania liczy kwadraty odległości do wszystkich wektorów bazy i wybiera $k$ najmniejszych przez częściowe sortowanie. Pierwiastek liczony jest dopiero dla wyniku, a sam program służy jako wzorzec poprawności.
+
+\paragraph{OpenMP.} Dla partii zapytań wątki dzielą między siebie zapytania (planowanie dynamiczne), a każdy wątek utrzymuje własny kopiec (max-heap) rozmiaru $k$, więc w pętli po bazie nie ma sekcji krytycznych. Przy małej partii ($Q$ mniejsze od liczby wątków) dzielona jest baza: każdy wątek ma lokalny kopiec top-$k$, a na końcu $p\cdot k$ kandydatów jest scalanych.
+
+\paragraph{MPI.} Proces 0 wczytuje dane, rozsyła zapytania przez \texttt{MPI\_Bcast}, a bazę dzieli na równe części przez \texttt{MPI\_Scatterv}. Każdy proces liczy lokalne top-$k$ dla wszystkich zapytań na swojej części bazy, po czym proces 0 zbiera wyniki przez \texttt{MPI\_Gather} i scala je do końcowego rankingu. Czas dzielimy na obliczenia (maksimum po procesach) i komunikację.
+
+\paragraph{CUDA i cuBLAS.} Własny kernel przypisuje jeden blok wątków do jednego zapytania: zapytanie leży w pamięci współdzielonej, wątki przeglądają bazę z krokiem siatki (wczytania \texttt{float4}) i trzymają lokalne top-$k$ w rejestrach. Następnie lokalne listy są łączone redukcją drzewiastą w bloku (scalanie dwóch posortowanych list w $O(k)$). Baza jest wgrywana na GPU raz. Wersja cuBLAS korzysta z tożsamości $\lVert q-b\rVert^2=\lVert q\rVert^2+\lVert b\rVert^2-2\,q\!\cdot\! b$: iloczyny liczy \texttt{cublasSgemm}, a normy, składanie i selekcja top-$k$ to własne kernele. Kosztem jest pełna macierz odległości $Q\times N$ w pamięci GPU.
+
+\section{Wyniki}
+Tabela~\ref{tab:skal} pokazuje skalowanie OpenMP (stałe $N=10^5$, $Q=250$) i MPI ($Q=100$; czas całkowity z komunikacją, pamięć to suma RSS procesów). Liczby QPS i czasy dla różnych wersji odpowiadają różnym wielkościom partii, więc nie należy ich porównywać wprost; do porównania służy Tabela~\ref{tab:wspolne}, gdzie wszystkie wersje uruchomiono dla tego samego $Q=100$.
+
+\begin{table}[!ht]
+\centering\small
+\caption{Skalowanie OpenMP i MPI ($N=10^5$, $D=128$, $k=10$). P95 to opóźnienie pojedynczego zapytania.}
+\label{tab:skal}
+\begin{tabular}{llrrrrrr}
+\toprule
+Wersja & $p$ & Czas [ms] & QPS & P95 [\textmu s] & Pamięć [MiB] & $S$ & $E$ \\
+\midrule
+OpenMP ($Q=250$) & 1  & 1533 & 163  & 16319 & 53  & 1,00 & 1,00 \\
+                 & 2  & 746  & 335  & 10497 & 53  & 2,06 & 1,03 \\
+                 & 4  & 384  & 651  & 6143  & 53  & 3,99 & 1,00 \\
+                 & 8  & 222  & 1125 & 8751  & 53  & 6,90 & 0,86 \\
+                 & 16 & 166  & 1506 & 18886 & 53  & 9,24 & 0,58 \\
+\midrule
+MPI ($Q=100$)    & 1  & 598  & 167  & 6029  & 118 & 1,00 & 1,00 \\
+                 & 2  & 328  & 305  & 3291  & 138 & 1,82 & 0,91 \\
+                 & 4  & 161  & 620  & 1552  & 177 & 3,71 & 0,93 \\
+                 & 8  & 93   & 1075 & 908   & 258 & 6,43 & 0,80 \\
+                 & 16 & 149  & 671  & 3920  & 408 & 4,02 & 0,25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]
+\centering\small
+\caption{Porównanie wersji dla wspólnego $Q=100$, $N=10^5$, $D=128$, $k=10$. Przyspieszenie względem referencji. Dla CUDA czas obejmuje transfer zapytań i wyników, a baza (7,9~ms) jest wgrywana raz; dla cuBLAS podano czas kernela. W MPI czas obejmuje rozesłanie bazy.}
+\label{tab:wspolne}
+\begin{tabular}{lrrrrr}
+\toprule
+Wersja & Czas [ms] & QPS & P95 [\textmu s] & Przyspieszenie & Pamięć RAM [MiB] \\
+\midrule
+Referencja         & 596,4 & 168   & 6577 & 1,0   & -- \\
+OpenMP, 8 wątków   & 80,3  & 1245  & 6603 & 7,4   & 53 \\
+OpenMP, 16 wątków  & 66,0  & 1516  & 9789 & 9,0   & 53 \\
+MPI, 8 procesów    & 93,0  & 1075  & 908  & 6,4   & 258 \\
+CUDA (własny kernel) & 8,95 & 11167 & 1917 & 67   & 226 \\
+CUDA + cuBLAS      & 2,17  & 46064 & --   & 275   & 403 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Opóźnienie pojedynczego zapytania w kolumnie P95 jest mierzone inaczej w każdej wersji (w OpenMP zapytanie liczy jeden wątek, w MPI wszystkie procesy, w CUDA jeden blok GPU), dlatego służy raczej do oceny rozrzutu niż do porównań między wersjami.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.74\textwidth]{fig/omp_speedup_efficiency.png}
+\caption{OpenMP: przyspieszenie i efektywność (16 wątków to SMT na 8 rdzeniach).}
+\end{figure}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.74\textwidth]{fig/mpi_speedup_efficiency.png}
+\caption{MPI na jednej maszynie: przyspieszenie i efektywność; $p=16$ to dwa procesy na rdzeń.}
+\end{figure}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.74\textwidth]{fig/mpi_time_p95.png}
+\caption{MPI: podział czasu na obliczenia i komunikację oraz P95 (wariant hybrydowy MPI+OpenMP przy $p\cdot$wątki$=16$).}
+\end{figure}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.74\textwidth]{fig/cuda_own_vs_cublas.png}
+\caption{CUDA: własny kernel i cuBLAS dla $N=10^4$, $10^5$, $10^6$ ($Q=20$, $k=10$).}
+\end{figure}
+
+\section{Wnioski}
+\begin{itemize}
+\item OpenMP skaluje się niemal idealnie do 4 wątków ($E\approx 1$), potem efektywność spada ($0{,}86$ dla 8 i $0{,}58$ dla 16 wątków), bo zadanie obciąża pamięć, a 16 wątków to już SMT na 8 rdzeniach; najlepszy wynik to $S=9{,}2$.
+\item MPI daje $S=6{,}4$ dla 8 procesów, a komunikacja (Bcast, Scatterv, Gather) to wtedy około 9\% czasu. Przy 16 procesach (oversubscribe) czas rośnie, co potwierdza, że zysk wynika z liczby fizycznych rdzeni. Wynik jest lokalny (jedna maszyna) i nie mówi nic o skalowaniu na klastrze. Zmiana $k$ w zakresie 1--100 prawie nie wpływa na czas (594--598~ms dla jednego procesu).
+\item GPU jest zdecydowanie najszybsze: przy $Q=100$ własny kernel jest około 67 razy szybszy od referencji, a cuBLAS (SGEMM) około 4 razy szybszy od własnego kernela; dla $N=10^6$ ($Q=20$) odpowiednio 15,6~ms i 7,9~ms. Przewaga cuBLAS kosztuje dodatkową pamięć na macierz odległości ($76$~MiB dla $N=10^6$, $Q=20$).
+\end{itemize}
+
+\end{document}
