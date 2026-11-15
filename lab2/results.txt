@@ -1,52 +1,191 @@
-PRiR Lab2 — Benchmark wyniki
-Plik danych: data/plik_3kolumny.txt
-Liczba punktów: 6865878
-Data: 2026-11-03
-Sprzęt: PC (192.168.100.246)
-Kompilacja: g++ -O2 -fopenmp -std=c++17
+PRiR Lab2 - wyniki benchmarku (OpenMP, chmura punktow)
+Sprzet: AMD Ryzen 7 5700X (8 rdzeni / 16 watkow), g++ 15.2, -O3 -fopenmp
+Punktow: 6865878, powtorzen: 7 na konfiguracje
+Statystyki: min(value)=-3.004412  max(value)=2.999249  sum(value)=-1597174.73
+==============================================================================
 
-============================================================
-ZADANIE 1: Centroid (reduction sum, schedule static)
-============================================================
-Wątki | Czas [s]  | Speedup
-------|-----------|--------
-  1   | 0.0055    | 1.00
-  2   | 0.0036    | 1.53
-  4   | 0.0030    | 1.83
-  8   | 0.0032    | 1.72
+--- SUROWE CZASY (s) ---
+seq  seq      -        chunk=     0 thr= 1 rep=0 t=0.213987
+seq  seq      -        chunk=     0 thr= 1 rep=1 t=0.213726
+seq  seq      -        chunk=     0 thr= 1 rep=2 t=0.214640
+seq  seq      -        chunk=     0 thr= 1 rep=3 t=0.214046
+seq  seq      -        chunk=     0 thr= 1 rep=4 t=0.215378
+seq  seq      -        chunk=     0 thr= 1 rep=5 t=0.213605
+seq  seq      -        chunk=     0 thr= 1 rep=6 t=0.216059
+par  critical static   chunk=     0 thr= 1 rep=0 t=0.239779
+par  critical static   chunk=     0 thr= 1 rep=1 t=0.233307
+par  critical static   chunk=     0 thr= 1 rep=2 t=0.232788
+par  critical static   chunk=     0 thr= 1 rep=3 t=0.231788
+par  critical static   chunk=     0 thr= 1 rep=4 t=0.234513
+par  critical static   chunk=     0 thr= 1 rep=5 t=0.231681
+par  critical static   chunk=     0 thr= 1 rep=6 t=0.236891
+par  critical static   chunk=     0 thr= 2 rep=0 t=0.272913
+par  critical static   chunk=     0 thr= 2 rep=1 t=0.276193
+par  critical static   chunk=     0 thr= 2 rep=2 t=0.266412
+par  critical static   chunk=     0 thr= 2 rep=3 t=0.281204
+par  critical static   chunk=     0 thr= 2 rep=4 t=0.279379
+par  critical static   chunk=     0 thr= 2 rep=5 t=0.272501
+par  critical static   chunk=     0 thr= 2 rep=6 t=0.271373
+par  critical static   chunk=     0 thr= 4 rep=0 t=0.564316
+par  critical static   chunk=     0 thr= 4 rep=1 t=0.559651
+par  critical static   chunk=     0 thr= 4 rep=2 t=0.555665
+par  critical static   chunk=     0 thr= 4 rep=3 t=0.557203
+par  critical static   chunk=     0 thr= 4 rep=4 t=0.567630
+par  critical static   chunk=     0 thr= 4 rep=5 t=0.558325
+par  critical static   chunk=     0 thr= 4 rep=6 t=0.563216
+par  critical static   chunk=     0 thr= 8 rep=0 t=0.985780
+par  critical static   chunk=     0 thr= 8 rep=1 t=0.980509
+par  critical static   chunk=     0 thr= 8 rep=2 t=0.969064
+par  critical static   chunk=     0 thr= 8 rep=3 t=0.981635
+par  critical static   chunk=     0 thr= 8 rep=4 t=0.974837
+par  critical static   chunk=     0 thr= 8 rep=5 t=0.979617
+par  critical static   chunk=     0 thr= 8 rep=6 t=0.976391
+par  critical static   chunk=     0 thr=16 rep=0 t=1.246826
+par  critical static   chunk=     0 thr=16 rep=1 t=1.313793
+par  critical static   chunk=     0 thr=16 rep=2 t=1.274790
+par  critical static   chunk=     0 thr=16 rep=3 t=1.359980
+par  critical static   chunk=     0 thr=16 rep=4 t=1.263834
+par  critical static   chunk=     0 thr=16 rep=5 t=1.287710
+par  critical static   chunk=     0 thr=16 rep=6 t=1.274055
+par  atomic   static   chunk=     0 thr= 1 rep=0 t=0.222806
+par  atomic   static   chunk=     0 thr= 1 rep=1 t=0.219415
+par  atomic   static   chunk=     0 thr= 1 rep=2 t=0.219468
+par  atomic   static   chunk=     0 thr= 1 rep=3 t=0.219440
+par  atomic   static   chunk=     0 thr= 1 rep=4 t=0.219506
+par  atomic   static   chunk=     0 thr= 1 rep=5 t=0.219409
+par  atomic   static   chunk=     0 thr= 1 rep=6 t=0.219523
+par  atomic   static   chunk=     0 thr= 2 rep=0 t=0.121641
+par  atomic   static   chunk=     0 thr= 2 rep=1 t=0.120495
+par  atomic   static   chunk=     0 thr= 2 rep=2 t=0.120336
+par  atomic   static   chunk=     0 thr= 2 rep=3 t=0.120624
+par  atomic   static   chunk=     0 thr= 2 rep=4 t=0.120493
+par  atomic   static   chunk=     0 thr= 2 rep=5 t=0.120662
+par  atomic   static   chunk=     0 thr= 2 rep=6 t=0.120520
+par  atomic   static   chunk=     0 thr= 4 rep=0 t=0.067488
+par  atomic   static   chunk=     0 thr= 4 rep=1 t=0.064347
+par  atomic   static   chunk=     0 thr= 4 rep=2 t=0.065370
+par  atomic   static   chunk=     0 thr= 4 rep=3 t=0.065312
+par  atomic   static   chunk=     0 thr= 4 rep=4 t=0.063783
+par  atomic   static   chunk=     0 thr= 4 rep=5 t=0.064625
+par  atomic   static   chunk=     0 thr= 4 rep=6 t=0.064936
+par  atomic   static   chunk=     0 thr= 8 rep=0 t=0.037762
+par  atomic   static   chunk=     0 thr= 8 rep=1 t=0.036933
+par  atomic   static   chunk=     0 thr= 8 rep=2 t=0.036904
+par  atomic   static   chunk=     0 thr= 8 rep=3 t=0.036920
+par  atomic   static   chunk=     0 thr= 8 rep=4 t=0.036927
+par  atomic   static   chunk=     0 thr= 8 rep=5 t=0.037237
+par  atomic   static   chunk=     0 thr= 8 rep=6 t=0.042036
+par  atomic   static   chunk=     0 thr=16 rep=0 t=0.031981
+par  atomic   static   chunk=     0 thr=16 rep=1 t=0.031609
+par  atomic   static   chunk=     0 thr=16 rep=2 t=0.034586
+par  atomic   static   chunk=     0 thr=16 rep=3 t=0.031600
+par  atomic   static   chunk=     0 thr=16 rep=4 t=0.031565
+par  atomic   static   chunk=     0 thr=16 rep=5 t=0.031573
+par  atomic   static   chunk=     0 thr=16 rep=6 t=0.043436
+par  private  static   chunk=     0 thr= 1 rep=0 t=0.212864
+par  private  static   chunk=     0 thr= 1 rep=1 t=0.211455
+par  private  static   chunk=     0 thr= 1 rep=2 t=0.211160
+par  private  static   chunk=     0 thr= 1 rep=3 t=0.211123
+par  private  static   chunk=     0 thr= 1 rep=4 t=0.211242
+par  private  static   chunk=     0 thr= 1 rep=5 t=0.211210
+par  private  static   chunk=     0 thr= 1 rep=6 t=0.211163
+par  private  static   chunk=     0 thr= 2 rep=0 t=0.108377
+par  private  static   chunk=     0 thr= 2 rep=1 t=0.106779
+par  private  static   chunk=     0 thr= 2 rep=2 t=0.106849
+par  private  static   chunk=     0 thr= 2 rep=3 t=0.106729
+par  private  static   chunk=     0 thr= 2 rep=4 t=0.111128
+par  private  static   chunk=     0 thr= 2 rep=5 t=0.107288
+par  private  static   chunk=     0 thr= 2 rep=6 t=0.107006
+par  private  static   chunk=     0 thr= 4 rep=0 t=0.057501
+par  private  static   chunk=     0 thr= 4 rep=1 t=0.055236
+par  private  static   chunk=     0 thr= 4 rep=2 t=0.055115
+par  private  static   chunk=     0 thr= 4 rep=3 t=0.057215
+par  private  static   chunk=     0 thr= 4 rep=4 t=0.057828
+par  private  static   chunk=     0 thr= 4 rep=5 t=0.058457
+par  private  static   chunk=     0 thr= 4 rep=6 t=0.058663
+par  private  static   chunk=     0 thr= 8 rep=0 t=0.031891
+par  private  static   chunk=     0 thr= 8 rep=1 t=0.031922
+par  private  static   chunk=     0 thr= 8 rep=2 t=0.031455
+par  private  static   chunk=     0 thr= 8 rep=3 t=0.031759
+par  private  static   chunk=     0 thr= 8 rep=4 t=0.032111
+par  private  static   chunk=     0 thr= 8 rep=5 t=0.032372
+par  private  static   chunk=     0 thr= 8 rep=6 t=0.033363
+par  private  static   chunk=     0 thr=16 rep=0 t=0.032607
+par  private  static   chunk=     0 thr=16 rep=1 t=0.033057
+par  private  static   chunk=     0 thr=16 rep=2 t=0.029212
+par  private  static   chunk=     0 thr=16 rep=3 t=0.030600
+par  private  static   chunk=     0 thr=16 rep=4 t=0.029437
+par  private  static   chunk=     0 thr=16 rep=5 t=0.036348
+par  private  static   chunk=     0 thr=16 rep=6 t=0.033872
+par  private  static   chunk=     0 thr=16 rep=0 t=0.032035
+par  private  static   chunk=     0 thr=16 rep=1 t=0.036226
+par  private  static   chunk=     0 thr=16 rep=2 t=0.030983
+par  private  static   chunk=     0 thr=16 rep=3 t=0.033203
+par  private  static   chunk=     0 thr=16 rep=4 t=0.028474
+par  private  static   chunk=     0 thr=16 rep=5 t=0.032474
+par  private  static   chunk=     0 thr=16 rep=6 t=0.031485
+par  private  static   chunk=  1000 thr=16 rep=0 t=0.038910
+par  private  static   chunk=  1000 thr=16 rep=1 t=0.034891
+par  private  static   chunk=  1000 thr=16 rep=2 t=0.031787
+par  private  static   chunk=  1000 thr=16 rep=3 t=0.036021
+par  private  static   chunk=  1000 thr=16 rep=4 t=0.029691
+par  private  static   chunk=  1000 thr=16 rep=5 t=0.029619
+par  private  static   chunk=  1000 thr=16 rep=6 t=0.029282
+par  private  static   chunk=100000 thr=16 rep=0 t=0.029653
+par  private  static   chunk=100000 thr=16 rep=1 t=0.031407
+par  private  static   chunk=100000 thr=16 rep=2 t=0.035996
+par  private  static   chunk=100000 thr=16 rep=3 t=0.039789
+par  private  static   chunk=100000 thr=16 rep=4 t=0.035092
+par  private  static   chunk=100000 thr=16 rep=5 t=0.035073
+par  private  static   chunk=100000 thr=16 rep=6 t=0.029701
+par  private  dynamic  chunk=  1000 thr=16 rep=0 t=0.023892
+par  private  dynamic  chunk=  1000 thr=16 rep=1 t=0.028790
+par  private  dynamic  chunk=  1000 thr=16 rep=2 t=0.026975
+par  private  dynamic  chunk=  1000 thr=16 rep=3 t=0.029990
+par  private  dynamic  chunk=  1000 thr=16 rep=4 t=0.028008
+par  private  dynamic  chunk=  1000 thr=16 rep=5 t=0.028997
+par  private  dynamic  chunk=  1000 thr=16 rep=6 t=0.029009
+par  private  dynamic  chunk=100000 thr=16 rep=0 t=0.031950
+par  private  dynamic  chunk=100000 thr=16 rep=1 t=0.027456
+par  private  dynamic  chunk=100000 thr=16 rep=2 t=0.029501
+par  private  dynamic  chunk=100000 thr=16 rep=3 t=0.031118
+par  private  dynamic  chunk=100000 thr=16 rep=4 t=0.030209
+par  private  dynamic  chunk=100000 thr=16 rep=5 t=0.032785
+par  private  dynamic  chunk=100000 thr=16 rep=6 t=0.027489
+par  private  guided   chunk=     0 thr=16 rep=0 t=0.025333
+par  private  guided   chunk=     0 thr=16 rep=1 t=0.030103
+par  private  guided   chunk=     0 thr=16 rep=2 t=0.038971
+par  private  guided   chunk=     0 thr=16 rep=3 t=0.029021
+par  private  guided   chunk=     0 thr=16 rep=4 t=0.033825
+par  private  guided   chunk=     0 thr=16 rep=5 t=0.035153
+par  private  guided   chunk=     0 thr=16 rep=6 t=0.028727
 
-Centroid: (566836.223344, 243447.883499, 215.371384)
+--- MEDIANY (s) + zakres min-max ---
+kind method   sched      chunk thr    mediana       min       max
+seq  seq      -              0   1   0.214046  0.213605  0.216059
+par  critical static         0   1   0.233307  0.231681  0.239779
+par  critical static         0   2   0.272913  0.266412  0.281204
+par  critical static         0   4   0.559651  0.555665  0.567630
+par  critical static         0   8   0.979617  0.969064  0.985780
+par  critical static         0  16   1.274790  1.246826  1.359980
+par  atomic   static         0   1   0.219468  0.219409  0.222806
+par  atomic   static         0   2   0.120520  0.120336  0.121641
+par  atomic   static         0   4   0.064936  0.063783  0.067488
+par  atomic   static         0   8   0.036933  0.036904  0.042036
+par  atomic   static         0  16   0.031609  0.031565  0.043436
+par  private  static         0   1   0.211210  0.211123  0.212864
+par  private  static         0   2   0.107006  0.106729  0.111128
+par  private  static         0   4   0.057501  0.055115  0.058663
+par  private  static         0   8   0.031922  0.031455  0.033363
+par  private  static         0  16   0.032255  0.028474  0.036348
+par  private  static      1000  16   0.031787  0.029282  0.038910
+par  private  static    100000  16   0.035073  0.029653  0.039789
+par  private  dynamic     1000  16   0.028790  0.023892  0.029990
+par  private  dynamic   100000  16   0.030209  0.027456  0.032785
+par  private  guided         0  16   0.030103  0.025333  0.038971
 
-============================================================
-ZADANIE 2: Min/Max odległości od centroidu (reduction min/max)
-============================================================
-Wątki | Czas [s]  | Speedup
-------|-----------|--------
-  1   | 0.0135    | 1.00
-  2   | 0.0077    | 1.75
-  4   | 0.0041    | 3.29
-  8   | 0.0026    | 5.19
-
-dmin = 2.481856, dmax = 431.399948
-
-============================================================
-ZADANIE 3: Normalizacja (parallel for, schedule static)
-============================================================
-Wątki | Czas [s]  | Speedup
-------|-----------|--------
-  1   | 0.0103    | 1.00
-  2   | 0.0061    | 1.69
-  4   | 0.0040    | 2.58
-  8   | 0.0039    | 2.64
-
-============================================================
-ZADANIE 4: Sąsiedzi w promieniu r=0.1 (próbka 100k, schedule dynamic)
-============================================================
-Wątki | Czas [s]  | Speedup
-------|-----------|--------
-  1   | 10.2473   | 1.00
-  2   |  5.0686   | 2.02
-  4   |  2.6121   | 3.92
-  8   |  1.5027   | 6.82
-
-Średnia liczba sąsiadów: 74289.46
+T_seq = 0.214046 s
+Speedup (vs seq), schedule(static):
+  critical : p=1,2,4,8,16 -> [0.92, 0.78, 0.38, 0.22, 0.17]
+  atomic   : p=1,2,4,8,16 -> [0.98, 1.78, 3.3, 5.8, 6.77]
+  private  : p=1,2,4,8,16 -> [1.01, 2.0, 3.72, 6.71, 6.64]

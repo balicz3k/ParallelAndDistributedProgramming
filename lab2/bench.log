@@ -1,0 +1,4 @@
+./lab2 data/plik_3kolumny.txt bench 7 > results_raw.csv
+Benchmark: punktow=6865878, powtorzen=7, maxthreads=16
+Benchmark zakonczony.
+Zapisano results_raw.csv
