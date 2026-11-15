@@ -1,0 +1,378 @@
+N,K,variant,threads,rep,time_s
+512,3,seq,1,0,0.002228
+512,3,seq,1,1,0.002191
+512,3,seq,1,2,0.001965
+512,3,seq,1,3,0.001934
+512,3,seq,1,4,0.001935
+# poprawnosc N=512 K=3 outer p=1 max|roznica|=0 OK
+512,3,outer,1,0,0.001940
+512,3,outer,1,1,0.001934
+512,3,outer,1,2,0.001934
+512,3,outer,1,3,0.001959
+512,3,outer,1,4,0.001943
+# poprawnosc N=512 K=3 outer p=2 max|roznica|=0 OK
+512,3,outer,2,0,0.001212
+512,3,outer,2,1,0.001209
+512,3,outer,2,2,0.001206
+512,3,outer,2,3,0.001187
+512,3,outer,2,4,0.000977
+# poprawnosc N=512 K=3 outer p=4 max|roznica|=0 OK
+512,3,outer,4,0,0.000618
+512,3,outer,4,1,0.000601
+512,3,outer,4,2,0.000605
+512,3,outer,4,3,0.000621
+512,3,outer,4,4,0.000601
+# poprawnosc N=512 K=3 outer p=8 max|roznica|=0 OK
+512,3,outer,8,0,0.000372
+512,3,outer,8,1,0.000342
+512,3,outer,8,2,0.000307
+512,3,outer,8,3,0.000307
+512,3,outer,8,4,0.000308
+# poprawnosc N=512 K=3 outer p=16 max|roznica|=0 OK
+512,3,outer,16,0,0.000311
+512,3,outer,16,1,0.000317
+512,3,outer,16,2,0.000314
+512,3,outer,16,3,0.000311
+512,3,outer,16,4,0.000325
+# poprawnosc N=512 K=3 collapse p=1 max|roznica|=0 OK
+512,3,collapse,1,0,0.002467
+512,3,collapse,1,1,0.002050
+512,3,collapse,1,2,0.002051
+512,3,collapse,1,3,0.002042
+512,3,collapse,1,4,0.002050
+# poprawnosc N=512 K=3 collapse p=2 max|roznica|=0 OK
+512,3,collapse,2,0,0.001277
+512,3,collapse,2,1,0.001279
+512,3,collapse,2,2,0.001304
+512,3,collapse,2,3,0.001163
+512,3,collapse,2,4,0.001025
+# poprawnosc N=512 K=3 collapse p=4 max|roznica|=0 OK
+512,3,collapse,4,0,0.000661
+512,3,collapse,4,1,0.000644
+512,3,collapse,4,2,0.000642
+512,3,collapse,4,3,0.000637
+512,3,collapse,4,4,0.000655
+# poprawnosc N=512 K=3 collapse p=8 max|roznica|=0 OK
+512,3,collapse,8,0,0.000358
+512,3,collapse,8,1,0.000352
+512,3,collapse,8,2,0.000351
+512,3,collapse,8,3,0.000329
+512,3,collapse,8,4,0.000332
+# poprawnosc N=512 K=3 collapse p=16 max|roznica|=0 OK
+512,3,collapse,16,0,0.000339
+512,3,collapse,16,1,0.000359
+512,3,collapse,16,2,0.000345
+512,3,collapse,16,3,0.000345
+512,3,collapse,16,4,0.000302
+# poprawnosc N=512 K=3 dynamic p=1 max|roznica|=0 OK
+512,3,dynamic,1,0,0.002603
+512,3,dynamic,1,1,0.002256
+512,3,dynamic,1,2,0.002178
+512,3,dynamic,1,3,0.001930
+512,3,dynamic,1,4,0.002480
+# poprawnosc N=512 K=3 dynamic p=2 max|roznica|=0 OK
+512,3,dynamic,2,0,0.001310
+512,3,dynamic,2,1,0.001284
+512,3,dynamic,2,2,0.001205
+512,3,dynamic,2,3,0.001174
+512,3,dynamic,2,4,0.000962
+# poprawnosc N=512 K=3 dynamic p=4 max|roznica|=0 OK
+512,3,dynamic,4,0,0.000657
+512,3,dynamic,4,1,0.000693
+512,3,dynamic,4,2,0.000602
+512,3,dynamic,4,3,0.000628
+512,3,dynamic,4,4,0.000606
+# poprawnosc N=512 K=3 dynamic p=8 max|roznica|=0 OK
+512,3,dynamic,8,0,0.000400
+512,3,dynamic,8,1,0.000366
+512,3,dynamic,8,2,0.000366
+512,3,dynamic,8,3,0.000335
+512,3,dynamic,8,4,0.000317
+# poprawnosc N=512 K=3 dynamic p=16 max|roznica|=0 OK
+512,3,dynamic,16,0,0.000652
+512,3,dynamic,16,1,0.000676
+512,3,dynamic,16,2,0.000896
+512,3,dynamic,16,3,0.000838
+512,3,dynamic,16,4,0.000734
+# poprawnosc N=512 K=3 inner p=1 max|roznica|=0 OK
+512,3,inner,1,0,0.002778
+512,3,inner,1,1,0.002164
+512,3,inner,1,2,0.002157
+512,3,inner,1,3,0.002154
+512,3,inner,1,4,0.002143
+# poprawnosc N=512 K=3 inner p=2 max|roznica|=0 OK
+512,3,inner,2,0,0.001672
+512,3,inner,2,1,0.001670
+512,3,inner,2,2,0.001666
+512,3,inner,2,3,0.001593
+512,3,inner,2,4,0.001395
+# poprawnosc N=512 K=3 inner p=4 max|roznica|=0 OK
+512,3,inner,4,0,0.001056
+512,3,inner,4,1,0.001058
+512,3,inner,4,2,0.001064
+512,3,inner,4,3,0.001058
+512,3,inner,4,4,0.001010
+# poprawnosc N=512 K=3 inner p=8 max|roznica|=0 OK
+512,3,inner,8,0,0.000783
+512,3,inner,8,1,0.000775
+512,3,inner,8,2,0.000761
+512,3,inner,8,3,0.000775
+512,3,inner,8,4,0.000773
+# poprawnosc N=512 K=3 inner p=16 max|roznica|=0 OK
+512,3,inner,16,0,0.000876
+512,3,inner,16,1,0.000938
+512,3,inner,16,2,0.000976
+512,3,inner,16,3,0.000955
+512,3,inner,16,4,0.000976
+N,K,variant,threads,rep,time_s
+2048,7,seq,1,0,0.131778
+2048,7,seq,1,1,0.130750
+2048,7,seq,1,2,0.130807
+2048,7,seq,1,3,0.130746
+2048,7,seq,1,4,0.131038
+# poprawnosc N=2048 K=7 outer p=1 max|roznica|=0 OK
+2048,7,outer,1,0,0.136839
+2048,7,outer,1,1,0.136905
+2048,7,outer,1,2,0.136889
+2048,7,outer,1,3,0.137460
+2048,7,outer,1,4,0.136497
+# poprawnosc N=2048 K=7 outer p=2 max|roznica|=0 OK
+2048,7,outer,2,0,0.068643
+2048,7,outer,2,1,0.070036
+2048,7,outer,2,2,0.068969
+2048,7,outer,2,3,0.068866
+2048,7,outer,2,4,0.068090
+# poprawnosc N=2048 K=7 outer p=4 max|roznica|=0 OK
+2048,7,outer,4,0,0.042152
+2048,7,outer,4,1,0.036426
+2048,7,outer,4,2,0.035441
+2048,7,outer,4,3,0.038497
+2048,7,outer,4,4,0.036186
+# poprawnosc N=2048 K=7 outer p=8 max|roznica|=0 OK
+2048,7,outer,8,0,0.020024
+2048,7,outer,8,1,0.023914
+2048,7,outer,8,2,0.020173
+2048,7,outer,8,3,0.019992
+2048,7,outer,8,4,0.019917
+# poprawnosc N=2048 K=7 outer p=16 max|roznica|=0 OK
+2048,7,outer,16,0,0.019663
+2048,7,outer,16,1,0.019389
+2048,7,outer,16,2,0.019876
+2048,7,outer,16,3,0.019572
+2048,7,outer,16,4,0.020139
+# poprawnosc N=2048 K=7 collapse p=1 max|roznica|=0 OK
+2048,7,collapse,1,0,0.146186
+2048,7,collapse,1,1,0.142605
+2048,7,collapse,1,2,0.144526
+2048,7,collapse,1,3,0.142825
+2048,7,collapse,1,4,0.143464
+# poprawnosc N=2048 K=7 collapse p=2 max|roznica|=0 OK
+2048,7,collapse,2,0,0.071502
+2048,7,collapse,2,1,0.071631
+2048,7,collapse,2,2,0.071418
+2048,7,collapse,2,3,0.072710
+2048,7,collapse,2,4,0.071658
+# poprawnosc N=2048 K=7 collapse p=4 max|roznica|=0 OK
+2048,7,collapse,4,0,0.038627
+2048,7,collapse,4,1,0.037066
+2048,7,collapse,4,2,0.037094
+2048,7,collapse,4,3,0.036802
+2048,7,collapse,4,4,0.037898
+# poprawnosc N=2048 K=7 collapse p=8 max|roznica|=0 OK
+2048,7,collapse,8,0,0.024987
+2048,7,collapse,8,1,0.021601
+2048,7,collapse,8,2,0.020519
+2048,7,collapse,8,3,0.024123
+2048,7,collapse,8,4,0.020812
+# poprawnosc N=2048 K=7 collapse p=16 max|roznica|=0 OK
+2048,7,collapse,16,0,0.020954
+2048,7,collapse,16,1,0.020676
+2048,7,collapse,16,2,0.021538
+2048,7,collapse,16,3,0.022251
+2048,7,collapse,16,4,0.021198
+# poprawnosc N=2048 K=7 dynamic p=1 max|roznica|=0 OK
+2048,7,dynamic,1,0,0.135803
+2048,7,dynamic,1,1,0.135733
+2048,7,dynamic,1,2,0.136064
+2048,7,dynamic,1,3,0.137809
+2048,7,dynamic,1,4,0.136551
+# poprawnosc N=2048 K=7 dynamic p=2 max|roznica|=0 OK
+2048,7,dynamic,2,0,0.070938
+2048,7,dynamic,2,1,0.067855
+2048,7,dynamic,2,2,0.067666
+2048,7,dynamic,2,3,0.067585
+2048,7,dynamic,2,4,0.067705
+# poprawnosc N=2048 K=7 dynamic p=4 max|roznica|=0 OK
+2048,7,dynamic,4,0,0.036488
+2048,7,dynamic,4,1,0.035616
+2048,7,dynamic,4,2,0.035925
+2048,7,dynamic,4,3,0.035072
+2048,7,dynamic,4,4,0.035229
+# poprawnosc N=2048 K=7 dynamic p=8 max|roznica|=0 OK
+2048,7,dynamic,8,0,0.020101
+2048,7,dynamic,8,1,0.019902
+2048,7,dynamic,8,2,0.020100
+2048,7,dynamic,8,3,0.019843
+2048,7,dynamic,8,4,0.019978
+# poprawnosc N=2048 K=7 dynamic p=16 max|roznica|=0 OK
+2048,7,dynamic,16,0,0.019401
+2048,7,dynamic,16,1,0.019275
+2048,7,dynamic,16,2,0.019511
+2048,7,dynamic,16,3,0.020050
+2048,7,dynamic,16,4,0.019388
+# poprawnosc N=2048 K=7 inner p=1 max|roznica|=0 OK
+2048,7,inner,1,0,0.144401
+2048,7,inner,1,1,0.139494
+2048,7,inner,1,2,0.151850
+2048,7,inner,1,3,0.148645
+2048,7,inner,1,4,0.150556
+# poprawnosc N=2048 K=7 inner p=2 max|roznica|=0 OK
+2048,7,inner,2,0,0.077899
+2048,7,inner,2,1,0.081458
+2048,7,inner,2,2,0.079279
+2048,7,inner,2,3,0.076066
+2048,7,inner,2,4,0.074450
+# poprawnosc N=2048 K=7 inner p=4 max|roznica|=0 OK
+2048,7,inner,4,0,0.039667
+2048,7,inner,4,1,0.039396
+2048,7,inner,4,2,0.039142
+2048,7,inner,4,3,0.039608
+2048,7,inner,4,4,0.038788
+# poprawnosc N=2048 K=7 inner p=8 max|roznica|=0 OK
+2048,7,inner,8,0,0.023163
+2048,7,inner,8,1,0.023355
+2048,7,inner,8,2,0.022315
+2048,7,inner,8,3,0.022494
+2048,7,inner,8,4,0.022438
+# poprawnosc N=2048 K=7 inner p=16 max|roznica|=0 OK
+2048,7,inner,16,0,0.027574
+2048,7,inner,16,1,0.022575
+2048,7,inner,16,2,0.059283
+2048,7,inner,16,3,0.027814
+2048,7,inner,16,4,0.276915
+N,K,variant,threads,rep,time_s
+4096,15,seq,1,0,2.464032
+4096,15,seq,1,1,2.450981
+4096,15,seq,1,2,2.461828
+4096,15,seq,1,3,2.454408
+4096,15,seq,1,4,2.457318
+# poprawnosc N=4096 K=15 outer p=1 max|roznica|=0 OK
+4096,15,outer,1,0,2.440455
+4096,15,outer,1,1,2.442982
+4096,15,outer,1,2,2.443235
+4096,15,outer,1,3,2.444577
+4096,15,outer,1,4,2.441077
+# poprawnosc N=4096 K=15 outer p=2 max|roznica|=0 OK
+4096,15,outer,2,0,1.316451
+4096,15,outer,2,1,1.223545
+4096,15,outer,2,2,1.222603
+4096,15,outer,2,3,1.223068
+4096,15,outer,2,4,1.224102
+# poprawnosc N=4096 K=15 outer p=4 max|roznica|=0 OK
+4096,15,outer,4,0,0.632698
+4096,15,outer,4,1,0.632259
+4096,15,outer,4,2,0.634320
+4096,15,outer,4,3,0.632351
+4096,15,outer,4,4,0.637468
+# poprawnosc N=4096 K=15 outer p=8 max|roznica|=0 OK
+4096,15,outer,8,0,0.464885
+4096,15,outer,8,1,0.403108
+4096,15,outer,8,2,0.393626
+4096,15,outer,8,3,0.358382
+4096,15,outer,8,4,0.356685
+# poprawnosc N=4096 K=15 outer p=16 max|roznica|=0 OK
+4096,15,outer,16,0,0.349128
+4096,15,outer,16,1,0.318739
+4096,15,outer,16,2,0.321534
+4096,15,outer,16,3,0.318215
+4096,15,outer,16,4,0.318079
+# poprawnosc N=4096 K=15 collapse p=1 max|roznica|=0 OK
+4096,15,collapse,1,0,2.453547
+4096,15,collapse,1,1,2.455199
+4096,15,collapse,1,2,2.455707
+4096,15,collapse,1,3,2.453370
+4096,15,collapse,1,4,2.454181
+# poprawnosc N=4096 K=15 collapse p=2 max|roznica|=0 OK
+4096,15,collapse,2,0,1.236603
+4096,15,collapse,2,1,1.297160
+4096,15,collapse,2,2,1.249643
+4096,15,collapse,2,3,1.235561
+4096,15,collapse,2,4,1.241116
+# poprawnosc N=4096 K=15 collapse p=4 max|roznica|=0 OK
+4096,15,collapse,4,0,0.659046
+4096,15,collapse,4,1,0.661928
+4096,15,collapse,4,2,0.658664
+4096,15,collapse,4,3,0.653495
+4096,15,collapse,4,4,0.660600
+# poprawnosc N=4096 K=15 collapse p=8 max|roznica|=0 OK
+4096,15,collapse,8,0,0.401979
+4096,15,collapse,8,1,0.383377
+4096,15,collapse,8,2,0.460307
+4096,15,collapse,8,3,0.367117
+4096,15,collapse,8,4,0.421587
+# poprawnosc N=4096 K=15 collapse p=16 max|roznica|=0 OK
+4096,15,collapse,16,0,0.326020
+4096,15,collapse,16,1,0.342958
+4096,15,collapse,16,2,0.418625
+4096,15,collapse,16,3,0.400919
+4096,15,collapse,16,4,0.359561
+# poprawnosc N=4096 K=15 dynamic p=1 max|roznica|=0 OK
+4096,15,dynamic,1,0,2.500811
+4096,15,dynamic,1,1,2.452463
+4096,15,dynamic,1,2,2.447091
+4096,15,dynamic,1,3,2.442170
+4096,15,dynamic,1,4,2.441584
+# poprawnosc N=4096 K=15 dynamic p=2 max|roznica|=0 OK
+4096,15,dynamic,2,0,1.267991
+4096,15,dynamic,2,1,1.249543
+4096,15,dynamic,2,2,1.298639
+4096,15,dynamic,2,3,1.257070
+4096,15,dynamic,2,4,1.235096
+# poprawnosc N=4096 K=15 dynamic p=4 max|roznica|=0 OK
+4096,15,dynamic,4,0,0.633268
+4096,15,dynamic,4,1,0.637408
+4096,15,dynamic,4,2,0.633121
+4096,15,dynamic,4,3,0.634115
+4096,15,dynamic,4,4,0.638433
+# poprawnosc N=4096 K=15 dynamic p=8 max|roznica|=0 OK
+4096,15,dynamic,8,0,0.358852
+4096,15,dynamic,8,1,0.395353
+4096,15,dynamic,8,2,0.398030
+4096,15,dynamic,8,3,0.414241
+4096,15,dynamic,8,4,0.369742
+# poprawnosc N=4096 K=15 dynamic p=16 max|roznica|=0 OK
+4096,15,dynamic,16,0,0.329029
+4096,15,dynamic,16,1,0.341408
+4096,15,dynamic,16,2,0.327468
+4096,15,dynamic,16,3,0.323071
+4096,15,dynamic,16,4,0.353170
+# poprawnosc N=4096 K=15 inner p=1 max|roznica|=0 OK
+4096,15,inner,1,0,2.459867
+4096,15,inner,1,1,2.500812
+4096,15,inner,1,2,2.462044
+4096,15,inner,1,3,2.453455
+4096,15,inner,1,4,2.452025
+# poprawnosc N=4096 K=15 inner p=2 max|roznica|=0 OK
+4096,15,inner,2,0,1.236706
+4096,15,inner,2,1,1.256360
+4096,15,inner,2,2,1.256157
+4096,15,inner,2,3,1.236785
+4096,15,inner,2,4,1.336574
+# poprawnosc N=4096 K=15 inner p=4 max|roznica|=0 OK
+4096,15,inner,4,0,0.645700
+4096,15,inner,4,1,0.639465
+4096,15,inner,4,2,0.646527
+4096,15,inner,4,3,0.646542
+4096,15,inner,4,4,0.641281
+# poprawnosc N=4096 K=15 inner p=8 max|roznica|=0 OK
+4096,15,inner,8,0,0.368335
+4096,15,inner,8,1,0.367388
+4096,15,inner,8,2,0.366094
+4096,15,inner,8,3,0.429640
+4096,15,inner,8,4,0.524602
+# poprawnosc N=4096 K=15 inner p=16 max|roznica|=0 OK
+4096,15,inner,16,0,0.479968
+4096,15,inner,16,1,0.378937
+4096,15,inner,16,2,0.347654
+4096,15,inner,16,3,0.346709
+4096,15,inner,16,4,0.341130
