@@ -1,15 +1,11 @@
+# Te same flagi co w wersji OpenMP i MPI, żeby przyspieszenia nie wynikały z kompilatora
 CXX      = g++
-CXXFLAGS = -O2 -std=c++17 -Wall -Wextra
+CXXFLAGS = -O3 -std=c++17 -Wall -Wextra -I../common
 
-TARGET = topk_ref
-SRC    = topk_ref.cpp
-
-.PHONY: all clean
-
-all: $(TARGET)
-
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $< -o $@
+topk_ref: topk_ref.cpp ../common/common.h
+	$(CXX) $(CXXFLAGS) topk_ref.cpp -o topk_ref
 
 clean:
-	rm -f $(TARGET) results.txt
+	rm -f topk_ref
+
+.PHONY: clean
