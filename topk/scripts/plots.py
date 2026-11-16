@@ -94,7 +94,7 @@ plt.rcParams.update({"font.size": 8, "text.usetex": False, "axes.grid": True,
 
 def save(fig, name):
     fig.tight_layout()
-    fig.savefig(os.path.join(FIG, name + ".pdf"))
+    fig.savefig(os.path.join(FIG, name + ".pdf"), metadata={"CreationDate": None})
     fig.savefig(os.path.join(FIG, name + ".png"), dpi=200)
     plt.close(fig)
 
@@ -338,6 +338,31 @@ for n, nm in [(MAIN["N"], "Glowny"), (max(Ns), "Nmax")]:
     if s_:
         macros["cudaGBs" + nm] = fmt(MAIN["Q"] * n * MAIN["D"] * 4 / (s_["core"] / 1000) / 1e9, 0)
         macros["cudaQps" + nm] = fmt(s_["qps"], 0)
+# CPU przy największym N: ile danych bazy na sekundę przechodzi przez procesor
+for v, nm, sel in [("omp", "omp", dict(threads=OMP_SWEEP)), ("mpi", "mpi", dict(procs=MPI_SWEEP))]:
+    s_ = find(v, **sel, N=max(Ns))
+    macros[nm + "GBsNmax"] = fmt(MAIN["Q"] * max(Ns) * MAIN["D"] * 4 / (s_["core"] / 1000) / 1e9, 0)
+
+# P95 w przypadku głównym i wpływ k oraz D (wartości skrajne)
+for v, nm, sel in [("ref", "Ref", dict()), ("omp", "Omp", dict(threads=OMP_SWEEP)),
+                   ("mpi", "Mpi", dict(procs=MPI_SWEEP)), ("cuda", "Cuda", dict(block=256)),
+                   ("cublas", "Cublas", dict())]:
+    macros["p" + nm] = fmt(find(v, **sel)["p95"], 0)
+    for param, values, tag in [("k", Ks, "K"), ("D", Ds, "D")]:
+        lo, hi = find_sweep(v, sel, param, min(values)), find_sweep(v, sel, param, max(values))
+        if lo and hi:
+            macros[nm.lower() + "Qps" + tag + "min"] = fmt(lo["qps"], 0)
+            macros[nm.lower() + "Qps" + tag + "max"] = fmt(hi["qps"], 0)
+hyb = []
+for h in CONF["HYBRID"]:
+    p_, t_ = (int(x) for x in h.split("x"))
+    s_ = find("mpi_omp", threads=t_, procs=p_)
+    if s_:
+        hyb.append((F1 / s_["full"], h))
+if hyb:
+    macros["hybrydaSmax"] = fmt(max(hyb)[0], 1)
+    macros["hybrydaNajlepsza"] = max(hyb)[1].replace("x", r"\times")
+macros["ompQpsQjeden"] = fmt(find("omp", threads=OMP_SWEEP, Q=1)["qps"], 0)
 
 # Q: amortyzacja kopii i startu kernela na GPU
 for v, nm in [("cuda", "cuda"), ("cublas", "cublas")]:
@@ -367,7 +392,7 @@ if os.path.isfile(env_path):
     esc = lambda t: (t.replace("\\", "/").replace("_", r"\_").replace("%", r"\%")
                      .replace("&", r"\&").replace("#", r"\#"))
     skip = ("commit", "części")
-    lines = [r"\begin{tabular}{ll}", r"\toprule"]
+    lines = [r"\begin{tabular}{@{}lp{10.5cm}@{}}", r"\toprule"]
     for line in open(env_path):
         key, _, val = line.strip().partition(": ")
         if key and key not in skip:
