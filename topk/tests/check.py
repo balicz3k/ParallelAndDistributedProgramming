@@ -10,25 +10,32 @@ Kryteria (euklides, float32 w implementacjach):
   * dla k>N: implementacja albo konczy sie bledem (kod!=0, brak wynikow),
     albo zwraca min(k,N) wynikow na zapytanie.
 
-Uzycie: python3 tests/check.py [--impl ref omp mpi cuda] [--quick]
+Kazdy program uruchamiany jest z --warmup 0 --repeat 1 --out <plik> (wspolne
+opcje z common/common.h), a ranking czytany z pliku.
+
+Uzycie: python3 tests/check.py [--impl ref omp mpi cuda cublas] [--quick]
 Kod wyjscia 0 = wszystko OK. Brak binarki => SKIP (nie blad), chyba ze --strict.
 """
-import argparse, glob, os, shutil, subprocess, sys, tempfile
+import argparse, os, shutil, subprocess, sys, tempfile
 import numpy as np
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RTOL, ATOL = 1e-4, 1e-4  # na odleglosci (nie kwadraty); float32, D<=512
 
 # nazwa -> (sciezka binarki, funkcja budujaca komende; p = watki/procesy)
-def _cmd(exe, base, qry, N, D, Q, k, p):
-    return [exe, base, qry, str(N), str(D), str(Q), str(k)]
+def _cmd(exe, base, qry, N, D, Q, k, out):
+    return [exe, base, qry, str(N), str(D), str(Q), str(k),
+            "--warmup", "0", "--repeat", "1", "--lat", "1", "--out", out]
 
 IMPLS = {
     "ref":  dict(exe="reference/topk_ref", ps=[None]),
-    "omp":  dict(exe="openmp/topk_omp",    ps=[1, 4, 8], extra=lambda p: [str(p)]),
+    "omp":  dict(exe="openmp/topk_omp",    ps=[1, 4, 8], extra=lambda p: ["--threads", str(p)]),
     "mpi":  dict(exe="mpi/topk_mpi",       ps=[1, 2, 4],
                  wrap=lambda p: ["mpirun", "--oversubscribe", "-np", str(p)]),
     "cuda": dict(exe="cuda/topk_cuda",     ps=[None], max_k=64),  # kernel: k<=MAX_K=64
+    # cuBLAS liczy d^2 = |q|^2 + |b|^2 - 2 q.b; dla prawie identycznych wektorow
+    # odejmowanie duzych liczb daje blad d^2 rzedu 1e-6, czyli d rzedu 1e-3
+    "cublas": dict(exe="cuda/topk_cublas", ps=[None], max_k=64, atol=2e-3),
 }
 
 def read_results(path):
@@ -44,19 +51,6 @@ def read_results(path):
             res.setdefault(q, []).append((r, i, d))
     return {q: [(i, d) for _, i, d in sorted(v)] for q, v in res.items()}
 
-def read_stdout_results(text):
-    """Parsuje ranking ze stdout (Zapytanie q: / #r indeks=I dist=D)."""
-    import re
-    res, q = {}, None
-    for line in text.splitlines():
-        m = re.match(r"\s*Zapytanie\s+(\d+)\s*:", line)
-        if m:
-            q = int(m.group(1)); res.setdefault(q, []); continue
-        m = re.match(r"\s*#(\d+)\s+indeks=(-?\d+)\s+dist=(\S+)", line)
-        if m and q is not None:
-            res[q].append((int(m.group(1)), int(m.group(2)), float(m.group(3))))
-    return {q: [(i, d) for _, i, d in sorted(v)] for q, v in res.items() if v}
-
 def truth(base, qry, k):
     kk = min(k, len(base))
     out = []
@@ -67,7 +61,7 @@ def truth(base, qry, k):
         out.append((idx, np.sqrt(d2[idx]), d2))
     return out
 
-def compare(res, tr, Q, k, N):
+def compare(res, tr, Q, k, N, atol=ATOL):
     errs = []
     kk = min(k, N)
     for q in range(Q):
@@ -77,7 +71,7 @@ def compare(res, tr, Q, k, N):
             continue
         idx, dist, d2 = tr[q]
         for r, (gi, gd) in enumerate(got):
-            tol = ATOL + RTOL * dist[r]
+            tol = atol + RTOL * dist[r]
             if abs(gd - dist[r]) > tol:
                 errs.append(f"q={q} rank={r+1}: dist {gd} != {dist[r]:.6f}")
             if gi != idx[r]:
@@ -128,19 +122,14 @@ def run_impl(name, spec, case, tmp, strict):
     fails, ties = [], 0
     for p in spec["ps"]:
         wd = tempfile.mkdtemp(dir=tmp)
-        cmd = spec.get("wrap", lambda p: [])(p) + _cmd(exe, bp, qp, N, D, Q, k, p) \
+        out = os.path.join(wd, "ranking.txt")
+        cmd = spec.get("wrap", lambda p: [])(p) + _cmd(exe, bp, qp, N, D, Q, k, out) \
               + (spec["extra"](p) if "extra" in spec and p else [])
         try:
             pr = subprocess.run(cmd, cwd=wd, capture_output=True, text=True, timeout=300)
         except subprocess.TimeoutExpired:
             fails.append(f"p={p}: timeout"); continue
-        files = [f for f in glob.glob(os.path.join(wd, "*.txt"))]
-        res = {}
-        for f in files:
-            res = read_results(f)
-            if res: break
-        if not res:   # np. CUDA: ranking tylko na stdout ("Zapytanie q:", "#r indeks=I dist=D")
-            res = read_stdout_results(pr.stdout)
+        res = read_results(out) if os.path.isfile(out) else {}
         tag = f"p={p}" if p else "-"
         if k > spec.get("max_k", 10**9) and pr.returncode != 0 and not res:
             continue  # znane ograniczenie implementacji (k > MAX_K) - czyste odrzucenie
@@ -152,7 +141,7 @@ def run_impl(name, spec, case, tmp, strict):
         elif pr.returncode != 0:
             fails.append(f"{tag}: kod wyjscia {pr.returncode}: {(pr.stderr or pr.stdout)[-120:].strip()}")
             continue
-        e, t = compare(res, tr, Q, k, N)
+        e, t = compare(res, tr, Q, k, N, spec.get("atol", ATOL))
         ties += t
         fails += [f"{tag}: {x}" for x in e[:3]]
     return ("FAIL" if fails else "OK"), fails + ([f"(remisy float32 zaakceptowane: {ties})"] if ties and not fails else [])
