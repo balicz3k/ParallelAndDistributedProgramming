@@ -19,6 +19,14 @@ Pomiary uruchamiaj na nieobciążonym komputerze – `run_all.sh` przerywa, gdy 
 zajęte przez inny proces. Części można liczyć osobno, np. `scripts/run_all.sh mpi k`
 (dopisuje do `results/raw.csv`), a `scripts/run_all.sh --dry` robi szybką próbę.
 
+## Wyniki
+
+Ostatni pełny przebieg: `results/raw.csv` (surowe powtórzenia), `results/env.txt`
+(sprzęt, wersje, uwagi o obciążeniu), `results/ranking_check.csv` (zgodność rankingów).
+Wykresy i tabele: `sprawozdanie/fig/`, `sprawozdanie/tables/` (z `make plots`),
+raport: `sprawozdanie/sprawozdanie.pdf`. Liczby celowo nie są przepisywane do README,
+żeby nie rozjechały się z plikiem wyników.
+
 ## Konfiguracja pomiarów (`experiments.conf`)
 
 Jeden plik z wszystkimi parametrami. Przypadek główny, wspólny dla wszystkich wersji:
