@@ -1,0 +1,9 @@
+\begin{tabular}{rrrrrr}
+\toprule
+$N$ & referencja & OpenMP, 16 wątków & MPI, 8 procesów & CUDA (własny kernel) & cuBLAS \\
+\midrule
+10\,000 & 1\,752 & 16\,003 & 12\,620 & 117\,718 & 394\,462 \\
+100\,000 & 171 & 1\,758 & 1\,213 & 12\,837 & 72\,819 \\
+1\,000\,000 & 17 & 156 & 61 & 384 & 9\,052 \\
+\bottomrule
+\end{tabular}
