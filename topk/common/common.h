@@ -36,7 +36,7 @@ struct Options {
 };
 
 // Zwraca false, gdy argumenty są błędne (program wypisuje wtedy sposób użycia).
-static bool parse_options(int argc, char **argv, Options &o) {
+inline bool parse_options(int argc, char **argv, Options &o) {
     if (argc < 7) return false;
     o.base_path = argv[1];
     o.query_path = argv[2];
@@ -68,7 +68,7 @@ static bool parse_options(int argc, char **argv, Options &o) {
     return true;
 }
 
-static void print_usage(const char *prog) {
+inline void print_usage(const char *prog) {
     std::fprintf(stderr,
         "Użycie: %s <baza.bin> <zapytania.bin> <N> <D> <Q> <k> [--threads T]\n"
         "        [--warmup W] [--repeat R] [--lat L] [--csv] [--out PLIK] [--no-stream]\n",
@@ -76,7 +76,7 @@ static void print_usage(const char *prog) {
 }
 
 // Wczytuje count liczb float32 z początku pliku (plik może być dłuższy).
-static bool load_floats(const std::string &path, size_t count, std::vector<float> &data) {
+inline bool load_floats(const std::string &path, size_t count, std::vector<float> &data) {
     std::ifstream f(path, std::ios::binary);
     if (!f) {
         std::fprintf(stderr, "Błąd: nie można otworzyć %s\n", path.c_str());
@@ -91,13 +91,13 @@ static bool load_floats(const std::string &path, size_t count, std::vector<float
     return true;
 }
 
-static double now_ms() {
+inline double now_ms() {
     using namespace std::chrono;
     return duration<double, std::milli>(steady_clock::now().time_since_epoch()).count();
 }
 
 // Percentyl p (0-100) z interpolacją liniową między sąsiednimi obserwacjami.
-static double percentile(std::vector<double> v, double p) {
+inline double percentile(std::vector<double> v, double p) {
     if (v.empty()) return 0.0;
     std::sort(v.begin(), v.end());
     double pos = p / 100.0 * (double)(v.size() - 1);
@@ -108,7 +108,7 @@ static double percentile(std::vector<double> v, double p) {
 }
 
 // Szczytowe zużycie RAM przez proces (Linux: ru_maxrss w KiB).
-static double peak_rss_mb() {
+inline double peak_rss_mb() {
     struct rusage ru;
     getrusage(RUSAGE_SELF, &ru);
     return ru.ru_maxrss / 1024.0;
@@ -126,7 +126,7 @@ struct Measurement {
 
 // Wiersz CSV (kolumny jak w nagłówku results/raw.csv, patrz scripts/run_all.sh):
 // version,N,D,Q,k,threads,procs,block,rep,io_ms,base_ms,core_ms,full_ms,qps,p50_us,p95_us,rss_mb,vram_mb
-static void print_csv(const char *version, const Options &o, int threads, int procs,
+inline void print_csv(const char *version, const Options &o, int threads, int procs,
                       int block, int rep, const Measurement &m) {
     double qps = o.Q / m.full_ms * 1000.0;
     std::printf("CSV,%s,%d,%d,%d,%d,%d,%d,%d,%d,%.3f,%.3f,%.4f,%.4f,%.2f,%.2f,%.2f,%.1f,%.1f\n",
@@ -136,7 +136,7 @@ static void print_csv(const char *version, const Options &o, int threads, int pr
 }
 
 // Krótkie podsumowanie na koniec (mediany z powtórzeń).
-static void print_summary(const char *version, const Options &o,
+inline void print_summary(const char *version, const Options &o,
                           const std::vector<Measurement> &ms) {
     std::vector<double> core, full, p95;
     for (const Measurement &m : ms) {
@@ -158,7 +158,7 @@ static void print_summary(const char *version, const Options &o,
 }
 
 // Zapis rankingu: idx i dist to tablice Q*k (dist = prawdziwa odległość, nie kwadrat).
-static void write_ranking(const std::string &path, int Q, int k,
+inline void write_ranking(const std::string &path, int Q, int k,
                           const std::vector<int> &idx, const std::vector<float> &dist) {
     FILE *f = std::fopen(path.c_str(), "w");
     if (!f) {
