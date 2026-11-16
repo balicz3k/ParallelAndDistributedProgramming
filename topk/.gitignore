@@ -1,13 +1,17 @@
-# duze pliki danych (odtwarzalne: make data)
-data/**/*.bin
-data/*.bin
+# duże pliki danych (odtwarzalne: make data)
+data/
 # binaria
 reference/topk_ref
 openmp/topk_omp
+mpi/topk_mpi
+mpi/topk_mpi_hybrid
 cuda/topk_cuda
 cuda/topk_cublas
-mpi/topk_mpi
-# artefakty testow
+# pliki robocze pomiarów (commitowane są raw.csv, env.txt, ranking_check.csv)
+results/run_all.log
+results/dry.csv
+results/rankings/
+# artefakty testów
 tests/_tmp/
 __pycache__/
 *.pyc

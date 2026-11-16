@@ -1,33 +1,31 @@
-# Glowny Makefile D03 top-k.  make all = data + build + test + bench + plots
-SUBDIRS  = reference openmp mpi cuda
-BENCH    = openmp mpi cuda          # reference nie ma celu bench (patrz reference/benchmark.py)
-PYTHON  ?= python3
-FULL    ?= 0                        # FULL=1 => dodatkowo N=1M (~490 MB)
+# Projekt D03 top-k. Pełne odtworzenie wyników: make all
+SUBDIRS = reference openmp mpi cuda
+PYTHON ?= python3
 
-.PHONY: all data build test verify bench plots clean distclean
+.PHONY: all build data test bench plots clean distclean
 
-all: data build test bench plots
-
-data:
-	scripts/gen_data.sh $(if $(filter 1,$(FULL)),--full,)
+all: bench plots
 
 build:
-	@for d in $(SUBDIRS); do echo "== build $$d"; $(MAKE) -C $$d || exit 1; done
+	@for d in $(SUBDIRS); do $(MAKE) -C $$d || exit 1; done
+
+data:
+	scripts/gen_data.sh
 
 test: build
-	$(PYTHON) tests/check.py
+	$(PYTHON) tests/check.py --strict
 
-verify: test
+# build + dane + testy + wszystkie pomiary z experiments.conf -> results/
+bench:
+	scripts/run_all.sh
 
-bench: build data
-	@for d in $(BENCH); do echo "== bench $$d"; $(MAKE) -C $$d bench || exit 1; done
-
+# wykresy i tabele do sprawozdania z results/raw.csv
 plots:
-	$(PYTHON) scripts/plots.py --root . --out plots
+	$(PYTHON) scripts/plots.py
 
 clean:
 	@for d in $(SUBDIRS); do $(MAKE) -C $$d clean; done
-	rm -rf plots tests/__pycache__ scripts/__pycache__
+	rm -rf tests/__pycache__ scripts/__pycache__
 
 distclean: clean
 	rm -rf data
