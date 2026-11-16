@@ -354,6 +354,21 @@ if os.path.isfile(rank_path):
     write_table("tab_ranking", ["Wersja", "Zapytania identyczne z ref.", "Różne pozycje",
                                 "Maks. różnica odległości"], rows, "lrrr")
 
+# ---------------------------------------------------------------- środowisko (results/env.txt)
+env_path = os.path.join(os.path.dirname(SRC), "env.txt")
+if os.path.isfile(env_path):
+    esc = lambda t: (t.replace("\\", "/").replace("_", r"\_").replace("%", r"\%")
+                     .replace("&", r"\&").replace("#", r"\#"))
+    skip = ("commit", "części")
+    lines = [r"\begin{tabular}{ll}", r"\toprule"]
+    for line in open(env_path):
+        key, _, val = line.strip().partition(": ")
+        if key and key not in skip:
+            lines.append(f"{esc(key)} & {esc(val)} \\\\")
+    lines += [r"\bottomrule", r"\end{tabular}"]
+    with open(os.path.join(TAB, "env.tex"), "w") as f:
+        f.write("\n".join(lines) + "\n")
+
 with open(os.path.join(TAB, "liczby.tex"), "w") as f:
     f.write("% wygenerowane przez scripts/plots.py z results/raw.csv\n")
     for name, val in macros.items():
