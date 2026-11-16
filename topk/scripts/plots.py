@@ -332,6 +332,13 @@ for key in groups:
     if key[0] == "cuda" and key[4] == max(Ks) and key[1:4] == (MAIN["N"], MAIN["D"], MAIN["Q"]):
         macros["cudaBlokKmax"] = str(key[7])
 
+# CUDA: ile danych bazy kernel czyta na sekundę (każdy blok czyta całą bazę: Q*N*D*4 bajty)
+for n, nm in [(MAIN["N"], "Glowny"), (max(Ns), "Nmax")]:
+    s_ = find_sweep("cuda", dict(block=256), "N", n)
+    if s_:
+        macros["cudaGBs" + nm] = fmt(MAIN["Q"] * n * MAIN["D"] * 4 / (s_["core"] / 1000) / 1e9, 0)
+        macros["cudaQps" + nm] = fmt(s_["qps"], 0)
+
 # Q: amortyzacja kopii i startu kernela na GPU
 for v, nm in [("cuda", "cuda"), ("cublas", "cublas")]:
     sel = dict(block=256) if v == "cuda" else dict()
