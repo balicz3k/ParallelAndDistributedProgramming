@@ -44,9 +44,11 @@ wykres CUDA (bloki, cuBLAS), wpływ N, D, k, Q. Wszystkie liczby pochodzą z
 2. **Co dokładnie przesyła MPI?** Raz: część bazy do każdego procesu. Na partię: zapytania
    (Bcast, Q·D liczb) i z powrotem Q·k par (indeks, kwadrat odległości) od każdego procesu.
    Nigdy całej macierzy odległości Q×N.
-3. **Czemu MPI na jednym komputerze jest wolniejsze od OpenMP?** Procesy mają osobne kopie
-   zapytań i wyników, dochodzi Bcast/Gather i scalanie w procesie 0, a wszystkie dzielą tę samą
-   przepustowość pamięci. Zysk z MPI byłby na kilku komputerach (więcej pamięci i rdzeni).
+3. **Czemu MPI na jednym komputerze jest wolniejsze od OpenMP?** Przy tej samej liczbie
+   wykonawców (8) czasy są bliskie; komunikacja na partię to ok. 1 ms (tab. MPI). OpenMP
+   wygrywa, bo używa 16 wątków (SMT), a MPI ma jeden proces na rdzeń. Przy N = 10^6 MPI odstaje
+   bardziej: procesy czytają rozłączne części bazy, więc nie korzystają ze wspólnej pamięci
+   podręcznej jak wątki OpenMP. Zysk z MPI byłby na kilku komputerach (więcej pamięci i rdzeni).
 4. **Czym się różni czas rdzenia od pełnego?** Rdzeń to same obliczenia (MPI: najwolniejszy
    proces, CUDA: kernel). Pełny dodaje komunikację (Bcast, Gather, scalanie) albo kopie
    zapytań i wyników między CPU i GPU. Jednorazowe rozesłanie bazy jest w `base_ms`.
@@ -68,11 +70,14 @@ wykres CUDA (bloki, cuBLAS), wpływ N, D, k, Q. Wszystkie liczby pochodzą z
     zapytania. Kosztem jest pamięć na macierz odległości (liczę kawałkami do 512 MiB)
     i mniejsza dokładność dla prawie identycznych wektorów.
 11. **Po co strumienie CUDA?** Partia jest dzielona na 4 części; kopia zapytań jednej części
-    może iść równolegle z kernelem innej. Porównanie z `--no-stream` jest w sprawozdaniu.
-12. **Czemu wersja OpenMP na 1 wątku jest szybsza od referencji?** Referencja zapisuje
-    wszystkie N odległości i robi `partial_sort`, a OpenMP trzyma kopiec k elementów
-    i większość kandydatów odrzuca jednym porównaniem. Dlatego S(p) liczę względem OpenMP(1),
-    a osobno pokazuję przyspieszenie względem referencji.
+    może iść równolegle z kernelem innej. W pomiarach zysku nie ma (77,9 vs 78,0 ms), bo kopia
+    1000 zapytań to 0,5 MB, a kernel liczy kilkadziesiąt ms - nie ma czego zasłaniać.
+12. **Czemu P95 pojedynczego zapytania na GPU jest gorsze niż na CPU?** Własny kernel liczy
+    jedno zapytanie jednym blokiem, czyli na jednym multiprocesorze; CPU dzieli zapytanie na
+    wszystkie wątki. Kernel jest zrobiony pod przepustowość dużych partii (przy Q = 1 ma tylko
+    ok. 500 QPS). cuBLAS ma najmniejsze P95, bo jedno zapytanie to mnożenie macierz-wektor na
+    całej karcie. S(p) liczę względem OpenMP na 1 wątku, który ma praktycznie ten sam czas
+    co referencja (0,98).
 13. **Jak sprawdzacie poprawność?** `tests/check.py`: niezależna referencja numpy w float64,
     przypadki brzegowe, tolerancja 1e-4. Dla przypadku głównego `results/ranking_check.csv`
     porównuje rankingi wszystkich wersji z referencją.
