@@ -3,20 +3,20 @@
 generate_data.py — generator float32 wektorów dla top-k benchmark
 
 Użycie:
-    python3 generate_data.py --n 1000000 --d 128 --q 100 --out_dir ./data
+    python3 generate_data.py --n 100000 --d 128 --q 10000 --out_dir data/n100000_d128
 
 Generuje:
     <out_dir>/base.bin    — N x D wartości float32 (wektory bazy)
     <out_dir>/queries.bin — Q x D wartości float32 (zapytania)
 
 Format binarny: raw float32, row-major (C order), bez nagłówka.
-Wektory losowane z rozkładu N(0, 1) i normalizowane do długości 1
-(unit sphere) — standard w benchmarkach ANN (np. SIFT, GloVe).
+Wektory losowane z rozkładu N(0, 1). Opcja --normalize skaluje je do długości 1
+(w pomiarach projektu nie jest używana). Najpierw losowana jest baza, potem
+zapytania, z jednego generatora o podanym ziarnie.
 """
 
 import argparse
 import os
-import struct
 import sys
 import time
 
