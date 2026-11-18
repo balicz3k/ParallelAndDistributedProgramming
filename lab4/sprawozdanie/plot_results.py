@@ -40,7 +40,7 @@ for ax, data, scale, unit, title, mk, col in [
     ax.set_xlabel("liczba procesów $p$")
     ax.set_ylabel(f"czas [{unit}]")
     ax.set_title(title, fontsize=8)
-axs[0].legend(loc="upper left", fontsize=7)
+axs[0].legend(loc="lower right", fontsize=7)
 fig.tight_layout()
 fig.savefig("fig_czas.pdf")
 fig.savefig("fig_czas.png", dpi=300)
