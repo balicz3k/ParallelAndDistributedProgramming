@@ -3,10 +3,10 @@
 # Każde powtórzenie to osobne uruchomienie mpirun; pierwsze (rozgrzewka) jest pomijane.
 #   results_raw.csv       - N = 10000 (zadanie)
 #   results_raw_duze.csv  - N = 10 000 000 (dodatkowo, dla porównania)
-# Użycie: ./run_benchmark.sh [R]   (R - liczba powtórzeń, domyślnie 20)
+# Użycie: ./run_benchmark.sh [R]   (R - liczba powtórzeń, domyślnie 30)
 set -e
 
-R=${1:-20}
+R=${1:-30}
 
 measure() {
     local n=$1 out=$2

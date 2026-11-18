@@ -47,6 +47,7 @@
 }
 \lstdefinestyle{plain}{style=c,language={},numbers=none}
 \lstset{style=c}
+\setlength{\emergencystretch}{3em}
 
 \input{liczby.tex}
 
@@ -131,7 +132,7 @@ Czas: 0.000208 s
 \end{lstlisting}
 
 \subsection*{Pomiary}
-Skrypt \texttt{run\_benchmark.sh} uruchamia program dla $p=2,\dots,8$: najpierw jedno uruchomienie rozgrzewkowe (pomijane), potem \powtorzenia{} osobnych uruchomień \texttt{mpirun}. Surowe wyniki są w \texttt{results\_raw.csv}; we wszystkich wierszach suma zgadza się z sekwencyjną. Dla porównania ten sam pomiar wykonałem dla $N=10^7$ (\texttt{results\_raw\_duze.csv}). W czasie pomiarów na komputerze działały też inne procesy użytkownika (m.in.\ trening sieci neuronowej), co tłumaczy pojedyncze wartości maksymalne odstające od mediany.
+Skrypt \texttt{run\_benchmark.sh} uruchamia program dla $p=2,\dots,8$: najpierw jedno uruchomienie rozgrzewkowe (pomijane), potem \powtorzenia{} osobnych uruchomień \texttt{mpirun}. Surowe wyniki są w \texttt{results\_raw.csv}; we wszystkich wierszach suma zgadza się z sekwencyjną. Dla porównania ten sam pomiar wykonałem dla $N=10^7$ (\texttt{results\_raw\_duze.csv}). Podczas pomiarów na komputerze nie działały żadne inne obciążające go zadania.
 
 \begin{table}[H]
 \centering
@@ -147,11 +148,11 @@ Skrypt \texttt{run\_benchmark.sh} uruchamia program dla $p=2,\dots,8$: najpierw 
 
 \section{Wnioski}
 \begin{itemize}
-\item Dla $N=10\,000$ czas rośnie z liczbą procesów: mediana wynosi \malyPdwa{}\,$\mu$s dla $p=2$ i \malyPosiem{}\,$\mu$s dla $p=8$. Samo sumowanie 10\,000 liczb jest bardzo krótkie, więc o czasie decyduje komunikacja (bariera, Scatter, Gather), a jej koszt rośnie z liczbą uczestników operacji zbiorowych.
+\item Dla $N=10\,000$ zwiększanie liczby procesów nie skraca czasu: mediana wynosi \malyPdwa{}\,$\mu$s dla $p=2$, ok.\ 120\,$\mu$s dla $p=6$ i 7 oraz \malyPosiem{}\,$\mu$s dla $p=8$ (tabela~\ref{tab:czasy}). Samo sumowanie 10\,000 liczb jest bardzo krótkie, więc o czasie decyduje komunikacja (bariera, Scatter, Gather), której koszt rośnie z liczbą uczestników operacji zbiorowych. Różnice między kolejnymi $p$ wynoszą kilkanaście mikrosekund, dlatego przebieg nie jest równomierny.
 \item Dla $N=10^7$ czas też nie spada (\duzyPdwa{}\,ms dla $p=2$, \duzyPosiem{}\,ms dla $p=8$). Prawie stały czas wskazuje, że przeważają kroki wykonywane tylko przez proces~0: generowanie tablicy i wysłanie jej części do pozostałych procesów. Równolegle liczona jest tylko suma lokalna, więc zwiększanie $p$ skraca niewielką część całego czasu.
 \item Rozdzielanie danych przez MPI opłaca się dopiero wtedy, gdy obliczenia na jeden element są dużo droższe niż jego przesłanie albo gdy dane powstają od razu w procesach (bez rozsyłania z procesu~0).
 \item Pomiar jest lokalny: procesy komunikują się przez pamięć współdzieloną jednego komputera. Na kilku węzłach połączonych siecią narzut komunikacji byłby większy.
-\item Rozrzut wyników jest mały w porównaniu z medianą poza pojedynczymi uruchomieniami (maksima w tabeli), które przypisuję innym procesom działającym w tym czasie; dlatego porównuję mediany.
+\item Rozrzut wyników jest mały w porównaniu z medianą poza pojedynczymi uruchomieniami (maksima w tabeli), które przypisuję zakłóceniom ze strony systemu operacyjnego (np.\ przełączaniu procesów); dlatego porównuję mediany.
 \end{itemize}
 
 \appendix
