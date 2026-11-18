@@ -59,84 +59,94 @@
 \maketitle
 \vspace{-1em}
 
-\section{Środowisko i program przykładowy}
-Wszystkie programy uruchamiałem na jednym komputerze: AMD Ryzen 7 5700X (8 rdzeni, 16 wątków sprzętowych), Kubuntu, Open MPI 5.0.10, \texttt{mpicc -O2 -Wall -Wextra}. Kompilacja i uruchamianie są w \texttt{Makefile}: \texttt{make} buduje programy, cele \texttt{run\_przyklad}, \texttt{run\_ring} i \texttt{run\_bcast} uruchamiają je z przykładowym wejściem, \texttt{benchmark} wykonuje pomiary, a \texttt{results} zapisuje wyniki programów do \texttt{results.txt}.
+Cały kod z komentarzami jest w załączonym archiwum \texttt{jakub\_balicki\_lab4.zip}, a poniżej są tylko najważniejsze fragmenty. Liczby do programów podawałem przez \texttt{printf}, dlatego nie widać ich w wydrukach. Programy uruchamiałem na komputerze z 8 rdzeniami (Open MPI 5).
 
-W materiałach do laboratorium nie było pliku z programem przykładowym, więc jako \texttt{przyklad.c} użyłem programu z wykładu~3 (\texttt{MPI\_Init}, \texttt{MPI\_Comm\_rank}, \texttt{MPI\_Comm\_size}, \texttt{MPI\_Finalize}), uzupełnionego o \texttt{MPI\_Get\_processor\_name}. Polecenia z treści zadania:
+\section{Program przykładowy}
+Program wypisuje numer procesu i liczbę procesów (\texttt{MPI\_Comm\_rank}, \texttt{MPI\_Comm\_size}).
 \begin{lstlisting}[style=plain]
-mpicc przyklad.c -o prz_mpi
-mpirun -np 7 --display-map ./prz_mpi
+$ mpicc przyklad.c -o prz_mpi
+$ mpirun -np 7 --display-map ./prz_mpi
+Moj numer 1, w grupie 7 procesow
+Moj numer 5, w grupie 7 procesow
+Moj numer 3, w grupie 7 procesow
+Moj numer 6, w grupie 7 procesow
+Moj numer 0, w grupie 7 procesow
+Moj numer 4, w grupie 7 procesow
+Moj numer 2, w grupie 7 procesow
 \end{lstlisting}
-Fragment wyniku (pełny w \texttt{results.txt}):
-\begin{lstlisting}[style=plain]
-Data for node: Kubuntu-PC	Num slots: 8	Max slots: 0	Num procs: 7
-    Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 0 Bound: package[0][core:L0]
-    ...
-    Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 6 Bound: package[0][core:L6]
-Moj numer 5, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 6, w grupie 7 procesow, wezel Kubuntu-PC
-...
-Moj numer 2, w grupie 7 procesow, wezel Kubuntu-PC
-\end{lstlisting}
-Mapa procesów (\texttt{-{}-display-map}) pokazuje jeden węzeł z 8 slotami (po jednym na rdzeń fizyczny), a każdy proces jest przypięty do osobnego rdzenia. Dlatego bez \texttt{-{}-oversubscribe} można uruchomić najwyżej 8 procesów. Kolejność wierszy \texttt{Moj numer \ldots} zmienia się między uruchomieniami, bo procesy piszą niezależnie, a \texttt{mpirun} przekazuje ich wyjście w kolejności nadejścia.
+Opcja \texttt{-{}-display-map} dodatkowo wypisuje, na którym rdzeniu działa każdy proces (pominięte powyżej). Kolejność wierszy jest za każdym razem inna, bo procesy działają niezależnie.
 
 \section{Pierścień}
-Proces~0 wczytuje liczbę i wysyła ją do procesu~1, proces $i$ odbiera od $i-1$ i wysyła do $(i+1) \bmod p$, więc ostatni odsyła liczbę do procesu~0. Liczba ujemna też obiega cały pierścień, ale nikt jej nie wypisuje; dzięki temu każdy proces kończy pętlę i nikt nie zostaje zablokowany w \texttt{MPI\_Recv}.
-\lstinputlisting[firstline=31,lastline=54,firstnumber=31]{../ring.c}
+Proces 0 wczytuje liczbę i wysyła ją do procesu 1. Każdy proces odbiera liczbę od poprzedniego i wysyła do następnego, a ostatni odsyła ją do procesu 0. Liczba ujemna też obiega pierścień, ale nikt jej nie wypisuje. Dzięki temu wszystkie procesy wiedzą, że mają skończyć, i żaden nie czeka w nieskończoność na \texttt{MPI\_Recv}.
+\begin{lstlisting}
+int next = (rank + 1) % size;          // do kogo wysylam
+int prev = (rank - 1 + size) % size;   // od kogo odbieram
+MPI_Recv(&value, 1, MPI_INT, prev, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+MPI_Send(&value, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
+\end{lstlisting}
 \begin{lstlisting}[style=plain]
-$ printf "5\n7\n-1\n" | mpirun -np 8 ./ring
+$ printf "5\n-1\n" | mpirun -np 8 ./ring
 Podaj liczbę:
 Proces 1 dostal 5 od procesu 0
 Proces 2 dostal 5 od procesu 1
-...
+Proces 3 dostal 5 od procesu 2
+Proces 4 dostal 5 od procesu 3
+Proces 5 dostal 5 od procesu 4
+Proces 6 dostal 5 od procesu 5
 Proces 7 dostal 5 od procesu 6
 Proces 0 dostal 5 od procesu 7
 Podaj liczbę:
-Proces 1 dostal 7 od procesu 0
-...
-Proces 0 dostal 7 od procesu 7
-Podaj liczbę:
 \end{lstlisting}
-W kolejnych uruchomieniach wydruki pojawiały się w tej samej kolejności, bo proces wypisuje dopiero po odebraniu liczby, a poprzedni proces wypisał przed jej wysłaniem.
 
 \section{Rozgłaszanie przez \texttt{MPI\_Bcast}}
-\lstinputlisting[firstline=20,lastline=36,firstnumber=20]{../bcast.c}
+Proces 0 wczytuje liczbę, a \texttt{MPI\_Bcast} przekazuje ją wszystkim procesom. Liczba ujemna też jest rozgłaszana, więc wszystkie procesy kończą pętlę razem.
+\begin{lstlisting}
+MPI_Bcast(&value, 1, MPI_INT, 0, MPI_COMM_WORLD);
+if (value < 0) break;
+printf("Proces %d z %d otrzymal liczbe %d\n", rank, size, value);
+\end{lstlisting}
 \begin{lstlisting}[style=plain]
-$ printf "5\n7\n-1\n" | mpirun -np 4 ./bcast
+$ printf "5\n-1\n" | mpirun -np 4 ./bcast
 Podaj liczbę:
 Proces 0 z 4 otrzymal liczbe 5
 Podaj liczbę:
-Proces 0 z 4 otrzymal liczbe 7
-Podaj liczbę:
+Proces 2 z 4 otrzymal liczbe 5
 Proces 1 z 4 otrzymal liczbe 5
-Proces 1 z 4 otrzymal liczbe 7
 Proces 3 z 4 otrzymal liczbe 5
-...
 \end{lstlisting}
-Każdy proces dostaje obie liczby, ale wydruki różnych procesów się przeplatają: \texttt{MPI\_Bcast} nie synchronizuje procesów po zakończeniu i proces~0 może od razu poprosić o kolejną liczbę.
+Drugie „Podaj liczbę:” pojawia się przed wydrukami procesów 1--3, bo proces 0 nie czeka, aż pozostałe procesy coś wypiszą.
 
 \section{Suma tablicy przez Scatter i Gather}
-Proces~0 tworzy tablicę $N=10\,000$ liczb całkowitych z przedziału 0--100 (\texttt{srand(42)}, \texttt{rand() \% 101}). Treść zadania zakłada równe części, ale $10\,000$ nie dzieli się przez 3, 6 i 7. Dlatego dla takich $p$ używam \texttt{MPI\_Scatterv}: tablica \texttt{counts} mówi, ile elementów dostaje każdy proces (pierwsze $N \bmod p$ procesów o jeden więcej), a \texttt{displs} -- od którego indeksu zaczyna się jego część. Dla $p$ = 2, 4, 5, 8 podział jest równy i program wywołuje zwykłe \texttt{MPI\_Scatter}. Każdy proces liczy sumę swojej części, \texttt{MPI\_Gather} zbiera sumy w procesie~0, który dodaje je i porównuje z sumą policzoną sekwencyjnie z całej tablicy.
-\lstinputlisting[firstline=50,lastline=82,firstnumber=50]{../scatter_gather.c}
+Proces 0 tworzy tablicę 10\,000 liczb losowych 0--100. \texttt{MPI\_Scatter} dzieli ją na części dla wszystkich procesów, każdy proces liczy sumę swojej części, a \texttt{MPI\_Gather} zbiera sumy w procesie 0, który je dodaje. Dla kontroli proces 0 liczy też sumę całej tablicy zwykłą pętlą.
 
-Czas mierzę od chwili zaraz po \texttt{MPI\_Init} do końca \texttt{MPI\_Gather} (samo \texttt{MPI\_Init} nie jest wliczone, bo przed nim nie można wywołać \texttt{MPI\_Wtime}). W tym przedziale jest też generowanie tablicy w procesie~0. \texttt{MPI\_Barrier} na początku wyrównuje start procesów, a jako wynik biorę najdłuższy z czasów procesów (\texttt{MPI\_Reduce} z \texttt{MPI\_MAX}), czyli czas, po którym wszystkie procesy skończyły komunikację.
+10\,000 nie dzieli się przez 3, 6 i 7, więc dla tych liczb procesów używam \texttt{MPI\_Scatterv}, które pozwala wysłać części różnej długości (różnią się najwyżej o 1 element).
+\begin{lstlisting}
+if (n % size == 0)
+    MPI_Scatter(data, my_count, MPI_INT, part, my_count, MPI_INT, 0, MPI_COMM_WORLD);
+else
+    MPI_Scatterv(data, counts, displs, MPI_INT, part, my_count, MPI_INT, 0, MPI_COMM_WORLD);
+
+long long local_sum = 0;
+for (int i = 0; i < my_count; i++)
+    local_sum += part[i];
+MPI_Gather(&local_sum, 1, MPI_LONG_LONG, sums, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+\end{lstlisting}
 \begin{lstlisting}[style=plain]
-$ mpirun -np 7 ./scatter_gather
-Liczba procesów: 7, N = 10000, MPI_Scatterv
-Proces 0: 1429 elementów, suma 72944
-Proces 1: 1429 elementów, suma 71693
-...
-Proces 6: 1428 elementów, suma 69737
+$ mpirun -np 4 ./scatter_gather
+Liczba procesów: 4, N = 10000, MPI_Scatter
+Proces 0: 2500 elementów, suma 125928
+Proces 1: 2500 elementów, suma 124163
+Proces 2: 2500 elementów, suma 122171
+Proces 3: 2500 elementów, suma 122353
 Suma całkowita: 494615 (sekwencyjnie 494615) OK
-Czas: 0.000208 s
+Czas: 0.000096 s
 \end{lstlisting}
 
-\subsection*{Pomiary}
-Skrypt \texttt{run\_benchmark.sh} uruchamia program dla $p=2,\dots,8$: najpierw jedno uruchomienie rozgrzewkowe (pomijane), potem \powtorzenia{} osobnych uruchomień \texttt{mpirun}. Surowe wyniki są w \texttt{results\_raw.csv}; we wszystkich wierszach suma zgadza się z sekwencyjną. Dla porównania ten sam pomiar wykonałem dla $N=10^7$ (\texttt{results\_raw\_duze.csv}). Podczas pomiarów na komputerze nie działały żadne inne obciążające go zadania.
+Czas mierzę funkcją \texttt{MPI\_Wtime} od chwili zaraz po \texttt{MPI\_Init} do końca \texttt{MPI\_Gather}. Program uruchomiłem \powtorzenia{} razy dla każdej liczby procesów od 2 do 8 i podaję medianę. Dla porównania ten sam pomiar zrobiłem dla tablicy $10^7$ elementów. We wszystkich uruchomieniach suma zgadzała się z sumą liczoną pętlą.
 
 \begin{table}[H]
 \centering
-\caption{Czas od \texttt{MPI\_Init} do końca \texttt{MPI\_Gather}: mediana, minimum i maksimum z \powtorzenia{} uruchomień. Pomiar lokalny (jeden komputer).}\label{tab:czasy}
+\caption{Czas wykonania: mediana, minimum i maksimum z \powtorzenia{} uruchomień.}\label{tab:czasy}
 \input{tabela.tex}
 \end{table}
 
@@ -148,22 +158,9 @@ Skrypt \texttt{run\_benchmark.sh} uruchamia program dla $p=2,\dots,8$: najpierw 
 
 \section{Wnioski}
 \begin{itemize}
-\item Dla $N=10\,000$ zwiększanie liczby procesów nie skraca czasu: mediana wynosi \malyPdwa{}\,$\mu$s dla $p=2$, ok.\ 120\,$\mu$s dla $p=6$ i 7 oraz \malyPosiem{}\,$\mu$s dla $p=8$ (tabela~\ref{tab:czasy}). Samo sumowanie 10\,000 liczb jest bardzo krótkie, więc o czasie decyduje komunikacja (bariera, Scatter, Gather), której koszt rośnie z liczbą uczestników operacji zbiorowych. Różnice między kolejnymi $p$ wynoszą kilkanaście mikrosekund, dlatego przebieg nie jest równomierny.
-\item Dla $N=10^7$ czas też nie spada (\duzyPdwa{}\,ms dla $p=2$, \duzyPosiem{}\,ms dla $p=8$). Prawie stały czas wskazuje, że przeważają kroki wykonywane tylko przez proces~0: generowanie tablicy i wysłanie jej części do pozostałych procesów. Równolegle liczona jest tylko suma lokalna, więc zwiększanie $p$ skraca niewielką część całego czasu.
-\item Rozdzielanie danych przez MPI opłaca się dopiero wtedy, gdy obliczenia na jeden element są dużo droższe niż jego przesłanie albo gdy dane powstają od razu w procesach (bez rozsyłania z procesu~0).
-\item Pomiar jest lokalny: procesy komunikują się przez pamięć współdzieloną jednego komputera. Na kilku węzłach połączonych siecią narzut komunikacji byłby większy.
-\item Rozrzut wyników jest mały w porównaniu z medianą poza pojedynczymi uruchomieniami (maksima w tabeli), które przypisuję zakłóceniom ze strony systemu operacyjnego (np.\ przełączaniu procesów); dlatego porównuję mediany.
+\item Dla 10\,000 elementów więcej procesów nie skraca czasu: \malyPdwa{}\,$\mu$s dla 2 procesów i \malyPosiem{}\,$\mu$s dla 8. Dodanie 10\,000 liczb trwa bardzo krótko, więc prawie cały czas zajmuje komunikacja między procesami, a ta trwa dłużej, gdy procesów jest więcej.
+\item Dla $10^7$ elementów czas też nie spada (\duzyPdwa{}\,ms dla 2 procesów, \duzyPosiem{}\,ms dla 8). Większość czasu zajmuje praca, którą robi tylko proces 0: losowanie tablicy i rozesłanie jej części. Równolegle liczona jest tylko suma, a to mała część całego czasu.
+\item Podział pracy przez MPI opłaca się dopiero wtedy, gdy obliczenia dla jednego elementu trwają dużo dłużej niż jego przesłanie.
 \end{itemize}
-
-\appendix
-\section{Pełny kod źródłowy}
-\subsection*{\texttt{przyklad.c}}
-\lstinputlisting{../przyklad.c}
-\subsection*{\texttt{ring.c}}
-\lstinputlisting{../ring.c}
-\subsection*{\texttt{bcast.c}}
-\lstinputlisting{../bcast.c}
-\subsection*{\texttt{scatter\_gather.c}}
-\lstinputlisting{../scatter_gather.c}
 
 \end{document}

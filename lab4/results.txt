@@ -1,28 +1,28 @@
 ### mpirun -np 7 --display-map ./prz_mpi
 
 ========================   JOB MAP   ========================
-Data for JOB prterun-Kubuntu-PC-486862@1 offset 0 Total slots allocated 8
+Data for JOB prterun-Kubuntu-PC-36601@1 offset 0 Total slots allocated 8
     Mapping policy: BYCORE:NOOVERSUBSCRIBE  Ranking policy: FILL Binding policy: CORE:IF-SUPPORTED
     Cpu set: N/A  PPR: N/A  Cpus-per-rank: N/A  Cpu Type: CORE
 
 
 Data for node: Kubuntu-PC	Num slots: 8	Max slots: 0	Num procs: 7
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 0 Bound: package[0][core:L0]
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 1 Bound: package[0][core:L1]
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 2 Bound: package[0][core:L2]
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 3 Bound: package[0][core:L3]
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 4 Bound: package[0][core:L4]
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 5 Bound: package[0][core:L5]
-        Process jobid: prterun-Kubuntu-PC-486862@1 App: 0 Process rank: 6 Bound: package[0][core:L6]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 0 Bound: package[0][core:L0]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 1 Bound: package[0][core:L1]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 2 Bound: package[0][core:L2]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 3 Bound: package[0][core:L3]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 4 Bound: package[0][core:L4]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 5 Bound: package[0][core:L5]
+        Process jobid: prterun-Kubuntu-PC-36601@1 App: 0 Process rank: 6 Bound: package[0][core:L6]
 
 =============================================================
-Moj numer 5, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 6, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 4, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 1, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 3, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 0, w grupie 7 procesow, wezel Kubuntu-PC
-Moj numer 2, w grupie 7 procesow, wezel Kubuntu-PC
+Moj numer 6, w grupie 7 procesow
+Moj numer 3, w grupie 7 procesow
+Moj numer 0, w grupie 7 procesow
+Moj numer 5, w grupie 7 procesow
+Moj numer 2, w grupie 7 procesow
+Moj numer 1, w grupie 7 procesow
+Moj numer 4, w grupie 7 procesow
 
 ### mpirun -np 8 ./ring  (wejście: 5, 7, -1)
 Podaj liczbę:
@@ -51,19 +51,19 @@ Proces 0 z 4 otrzymal liczbe 5
 Podaj liczbę:
 Proces 0 z 4 otrzymal liczbe 7
 Podaj liczbę:
+Proces 2 z 4 otrzymal liczbe 5
+Proces 2 z 4 otrzymal liczbe 7
 Proces 1 z 4 otrzymal liczbe 5
 Proces 1 z 4 otrzymal liczbe 7
 Proces 3 z 4 otrzymal liczbe 5
 Proces 3 z 4 otrzymal liczbe 7
-Proces 2 z 4 otrzymal liczbe 5
-Proces 2 z 4 otrzymal liczbe 7
 
 ### mpirun -np 2 ./scatter_gather
 Liczba procesów: 2, N = 10000, MPI_Scatter
 Proces 0: 5000 elementów, suma 250091
 Proces 1: 5000 elementów, suma 244524
 Suma całkowita: 494615 (sekwencyjnie 494615) OK
-Czas: 0.000148 s
+Czas: 0.000091 s
 
 ### mpirun -np 3 ./scatter_gather
 Liczba procesów: 3, N = 10000, MPI_Scatterv
@@ -71,7 +71,7 @@ Proces 0: 3334 elementów, suma 168641
 Proces 1: 3333 elementów, suma 162847
 Proces 2: 3333 elementów, suma 163127
 Suma całkowita: 494615 (sekwencyjnie 494615) OK
-Czas: 0.000158 s
+Czas: 0.000099 s
 
 ### mpirun -np 4 ./scatter_gather
 Liczba procesów: 4, N = 10000, MPI_Scatter
@@ -80,7 +80,7 @@ Proces 1: 2500 elementów, suma 124163
 Proces 2: 2500 elementów, suma 122171
 Proces 3: 2500 elementów, suma 122353
 Suma całkowita: 494615 (sekwencyjnie 494615) OK
-Czas: 0.000161 s
+Czas: 0.000096 s
 
 ### mpirun -np 7 ./scatter_gather
 Liczba procesów: 7, N = 10000, MPI_Scatterv
@@ -92,7 +92,7 @@ Proces 4: 1428 elementów, suma 69947
 Proces 5: 1428 elementów, suma 69949
 Proces 6: 1428 elementów, suma 69737
 Suma całkowita: 494615 (sekwencyjnie 494615) OK
-Czas: 0.000208 s
+Czas: 0.000117 s
 
 ### mpirun -np 8 ./scatter_gather
 Liczba procesów: 8, N = 10000, MPI_Scatter
@@ -105,4 +105,4 @@ Proces 5: 1250 elementów, suma 60636
 Proces 6: 1250 elementów, suma 60966
 Proces 7: 1250 elementów, suma 61387
 Suma całkowita: 494615 (sekwencyjnie 494615) OK
-Czas: 0.000169 s
+Czas: 0.000104 s

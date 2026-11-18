@@ -1,6 +1,5 @@
 /* Lab 4, punkt 2: program przykładowy MPI.
- * Program „hello” z wykładu 3 (MPI_Init, MPI_Comm_rank, MPI_Comm_size),
- * dodatkowo wypisuje nazwę węzła, na którym działa proces.
+ * Każdy proces wypisuje swój numer (rank) i liczbę wszystkich procesów (size).
  *
  * Kompilacja:   mpicc przyklad.c -o prz_mpi
  * Uruchomienie: mpirun -np 7 --display-map ./prz_mpi
@@ -10,15 +9,13 @@
 
 int main(int argc, char **argv)
 {
-    int rank, size, name_len;
-    char name[MPI_MAX_PROCESSOR_NAME];
+    int rank, size;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Get_processor_name(name, &name_len);
+    MPI_Init(&argc, &argv);                  /* start MPI */
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);    /* mój numer */
+    MPI_Comm_size(MPI_COMM_WORLD, &size);    /* ile jest procesów */
 
-    printf("Moj numer %d, w grupie %d procesow, wezel %s\n", rank, size, name);
+    printf("Moj numer %d, w grupie %d procesow\n", rank, size);
 
     MPI_Finalize();
     return 0;
